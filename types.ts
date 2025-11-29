@@ -1,4 +1,5 @@
 
+
 export enum BadgeType {
   SILVER = 'Silver',
   GOLD = 'Gold',
@@ -128,5 +129,7 @@ export interface PageData {
   state?: string;
   district?: string;
   manualLocation?: boolean;
+  // FIX: Add 'viewMap' property to allow navigating directly to the map view.
+  viewMap?: boolean;
   // Add other potential filters
 }

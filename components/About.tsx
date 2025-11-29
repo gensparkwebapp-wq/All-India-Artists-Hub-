@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView, useAnimationControls, animate } from 'framer-motion';
 import {
-  Globe, Heart, Twitter, Instagram, Youtube, Mic, MapPin, Users
+  Globe, Heart, Twitter, Instagram, Youtube, Mic, MapPin, Users, X
 } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { LOCATION_DATA } from '../constants';
+
 
 // A reusable counter component for animated stats
 const StatCounter = ({ to, text, icon: Icon }: { to: number, text: string, icon: React.ElementType }) => {
@@ -44,9 +47,69 @@ const StatCounter = ({ to, text, icon: Icon }: { to: number, text: string, icon:
   );
 };
 
+const NgoMembershipModal = ({ isOpen, onClose, onSubmit, t }: { isOpen: boolean, onClose: () => void, onSubmit: (data: any) => void, t: any }) => {
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+    onSubmit(data);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        className="bg-white rounded-xl shadow-2xl w-full max-w-md"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center p-5 border-b border-gray-200">
+          <h3 className="text-xl font-bold text-gray-800">Become a Member</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X size={24} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div>
+            <label htmlFor="ngo-name" className="font-semibold text-gray-700 text-sm">Full Name</label>
+            <input id="ngo-name" name="name" type="text" placeholder="Your Name" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition" />
+          </div>
+          <div>
+            <label htmlFor="ngo-email" className="font-semibold text-gray-700 text-sm">Email Address</label>
+            <input id="ngo-email" name="email" type="email" placeholder="Your Email" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition" />
+          </div>
+          <div>
+            <label htmlFor="ngo-state" className="font-semibold text-gray-700 text-sm">State</label>
+            <select id="ngo-state" name="state" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition bg-white appearance-none">
+              <option value="">Select your state</option>
+              {LOCATION_DATA.map(state => (
+                <option key={state.name} value={state.name}>{state.name}</option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="w-full bg-[#007BFF] text-white py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition transform hover:-translate-y-0.5 shadow-md">
+            Submit Application
+          </button>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 
 const About: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [isNgoModalOpen, setIsNgoModalOpen] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     document.title = "About ArtistsHub India – Empowering Indian Artists";
@@ -57,6 +120,15 @@ const About: React.FC = () => {
   }, []);
 
   const toggleLang = () => setLang(prev => prev === 'en' ? 'hi' : 'en');
+  
+    const handleNgoSubmit = (data: any) => {
+    // Simulate API call to /api/membership
+    console.log("Submitting NGO Membership:", data);
+    
+    // Show success toast and close modal
+    showToast(`Thank you, ${data.name}! Your application is submitted.`);
+    setIsNgoModalOpen(false);
+  };
   
   const content = {
     en: {
@@ -151,6 +223,13 @@ const About: React.FC = () => {
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
         .font-poppins { font-family: 'Poppins', sans-serif; }
       `}</style>
+      
+      <NgoMembershipModal 
+        isOpen={isNgoModalOpen} 
+        onClose={() => setIsNgoModalOpen(false)}
+        onSubmit={handleNgoSubmit}
+        t={t}
+      />
       
       <div className="fixed top-28 right-4 z-50">
         <button
@@ -328,7 +407,10 @@ const About: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.ngo_title}</h2>
             <div className="w-20 h-1.5 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full mb-6"></div>
             <p className="text-gray-600 leading-relaxed mb-8">{t.ngo_content}</p>
-            <button className="bg-[#007BFF] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition transform hover:scale-105">
+            <button 
+              onClick={() => setIsNgoModalOpen(true)}
+              className="bg-[#007BFF] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition transform hover:scale-105"
+            >
               {t.ngo_cta}
             </button>
           </motion.div>

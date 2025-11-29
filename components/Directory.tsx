@@ -1,5 +1,9 @@
 
 
+
+
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle, List, Loader2 } from 'lucide-react';
 import { BadgeType, PageData, DirectoryArtist } from '../types';
@@ -71,6 +75,13 @@ const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number }
         <span>{artist.state} &gt; {artist.district}</span>
       </div>
 
+      {/* Short Bio Section */}
+      {artist.description && (
+        <p className="text-xs text-gray-500 mt-3 line-clamp-2 leading-relaxed">
+          {artist.description}
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-2 mt-3">
         {artist.skills.slice(0, 3).map((skill: string, idx: number) => (
           <span key={idx} className="px-2 py-1 bg-brand-surface text-brand-textBody text-[10px] rounded-full border border-gray-200">
@@ -78,13 +89,6 @@ const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number }
           </span>
         ))}
       </div>
-
-      {/* Short Bio Section */}
-      {artist.description && (
-        <p className="text-xs text-gray-500 mt-3 line-clamp-2 leading-relaxed">
-          {artist.description}
-        </p>
-      )}
 
       <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
         <div>
@@ -239,6 +243,9 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
       if (initialFilters.nearby) {
         setSelectedRadius(25);
         detectUserLocation();
+      }
+      if (initialFilters.viewMap) {
+        setViewMode('map');
       }
     }
   }, [initialFilters]);
@@ -475,8 +482,24 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                </p>
                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1 p-1 bg-gray-200 rounded-lg">
-                    <button onClick={() => setViewMode('list')} className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'}`}><List size={14}/> List</button>
-                    <button onClick={() => setViewMode('map')} className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${viewMode === 'map' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'}`}><MapIcon size={14}/> Map</button>
+                    <button 
+                      onClick={() => setViewMode('list')} 
+                      className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
+                        viewMode === 'list' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'
+                      }`}
+                      aria-label="List View"
+                    >
+                      <List size={14}/> List
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('map')} 
+                      className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${
+                        viewMode === 'map' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'
+                      }`}
+                      aria-label="Map View"
+                    >
+                      <MapIcon size={14}/> Map
+                    </button>
                   </div>
                  <div className="flex items-center gap-2">
                    <span className="text-xs font-bold text-gray-500">Sort By:</span>
