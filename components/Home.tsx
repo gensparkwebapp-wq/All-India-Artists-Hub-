@@ -94,7 +94,7 @@ const TrendingArtistCard: React.FC<{ artist: any }> = ({ artist }) => (
 
 const CategoryCard = ({ icon: Icon, title, desc, color }: any) => (
   <div className="bg-white p-6 rounded-card shadow-card hover:shadow-card-hover border border-transparent transition-all duration-300 group text-center md:text-left hover:-translate-y-2">
-    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 mx-auto md:mx-0 ${color} shadow-md`}>
+    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 mx-auto md:mx-0 ${color} shadow-md group-hover:animate-bounce`}>
       <Icon size={28} className="text-white" />
     </div>
     <h3 className="font-bold text-xl mb-2 text-brand-textMain group-hover:text-brand-primary transition">{title}</h3>
