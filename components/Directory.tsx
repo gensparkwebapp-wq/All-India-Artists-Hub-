@@ -4,6 +4,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle, List, Loader2 } from 'lucide-react';
 import { BadgeType, PageData, DirectoryArtist } from '../types';
@@ -404,7 +406,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedState} 
                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none"
                    >
                      <option value="">All States</option>
                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
@@ -413,7 +415,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                       value={selectedDistrict} 
                       onChange={(e) => setSelectedDistrict(e.target.value)}
                       disabled={!selectedState}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:bg-gray-100 bg-gray-50"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:bg-gray-100 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none"
                    >
                      <option value="">All Districts</option>
                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
