@@ -1,9 +1,29 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown } from 'lucide-react';
+import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle } from 'lucide-react';
 import { BadgeType, PageData, DirectoryArtist } from '../types';
 import { DIRECTORY_ARTISTS, LOCATION_DATA, CATEGORIES, SUBCATEGORIES } from '../constants';
 import FollowButton from './FollowButton';
 import SectionHeading from './SectionHeading';
+import { searchRealWorldPlaces, MapPlace } from '../services/genai';
+
+// --- Helper: Haversine Distance Calculation ---
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
+};
+
+const deg2rad = (deg: number) => {
+  return deg * (Math.PI / 180);
+};
 
 // --- Artist Card with Distance ---
 const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number } }> = ({ artist }) => (
@@ -86,14 +106,70 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   const [selectedDistrict, setSelectedDistrict] = useState(initialFilters?.district || '');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  
+  // Distance Filter States
+  const [selectedRadius, setSelectedRadius] = useState<number | null>(null);
+  const [userCoords, setUserCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+
+  // Google Maps Grounding State
+  const [useRealWorldMap, setUseRealWorldMap] = useState(false);
+  const [realWorldPlaces, setRealWorldPlaces] = useState<MapPlace[]>([]);
+  const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
 
   // Handle Initial Filters update
   useEffect(() => {
     if (initialFilters) {
       if (initialFilters.state) setSelectedState(initialFilters.state);
       if (initialFilters.district) setSelectedDistrict(initialFilters.district);
+      if (initialFilters.nearby) {
+        setSelectedRadius(25); // Default to 25km if nearby requested
+        detectUserLocation();
+      }
     }
   }, [initialFilters]);
+
+  // Handle Real World Search
+  useEffect(() => {
+    if (useRealWorldMap && searchTerm.length > 3) {
+      const fetchPlaces = async () => {
+        setIsLoadingPlaces(true);
+        // Pass user coords if available to bias search
+        const places = await searchRealWorldPlaces(searchTerm, userCoords?.lat, userCoords?.lng);
+        setRealWorldPlaces(places);
+        setIsLoadingPlaces(false);
+      };
+      // Debounce slightly
+      const timer = setTimeout(fetchPlaces, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [useRealWorldMap, searchTerm, userCoords]);
+
+  const detectUserLocation = () => {
+    setIsLocating(true);
+    setLocationError('');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCoords({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error detecting location:", error);
+          setLocationError('Could not detect location. Please enable GPS.');
+          setIsLocating(false);
+          setSelectedRadius(null); // Reset if failed
+        }
+      );
+    } else {
+      setLocationError('Geolocation is not supported by this browser.');
+      setIsLocating(false);
+    }
+  };
 
   const districts = useMemo(() => {
     return LOCATION_DATA.find(s => s.name === selectedState)?.districts || [];
@@ -104,18 +180,43 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   }, [selectedCategory]);
 
   const filteredArtists = useMemo(() => {
-    return DIRECTORY_ARTISTS.filter(artist => {
+    let artists = DIRECTORY_ARTISTS.filter(artist => {
       if (searchTerm && !artist.name.toLowerCase().includes(searchTerm.toLowerCase()) && !artist.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
       if (selectedState && artist.state !== selectedState) return false;
       if (selectedDistrict && artist.district !== selectedDistrict) return false;
       if (selectedCategory && artist.category !== selectedCategory) return false;
       if (selectedSubCategory && artist.subcategory !== selectedSubCategory) return false;
       return true;
-    }).map(artist => ({
-        ...artist,
-        distance: initialFilters?.nearby ? Math.random() * 10 : undefined // Mock distance if nearby is requested
-    }));
-  }, [searchTerm, selectedState, selectedDistrict, selectedCategory, selectedSubCategory, initialFilters]);
+    }).map(artist => {
+        // Calculate Distance if user coords available
+        if (userCoords && artist.geoLat && artist.geoLng) {
+            const dist = calculateDistance(userCoords.lat, userCoords.lng, artist.geoLat, artist.geoLng);
+            return { ...artist, distance: dist };
+        }
+        return { ...artist, distance: undefined };
+    });
+
+    // Filter by Radius
+    if (selectedRadius !== null && userCoords) {
+        artists = artists.filter(a => a.distance !== undefined && a.distance <= selectedRadius);
+        // Sort by nearest
+        artists.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
+    return artists;
+  }, [searchTerm, selectedState, selectedDistrict, selectedCategory, selectedSubCategory, selectedRadius, userCoords]);
+
+  const handleRadiusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'all') {
+      setSelectedRadius(null);
+    } else {
+      setSelectedRadius(Number(val));
+      if (!userCoords) {
+        detectUserLocation();
+      }
+    }
+  };
 
   return (
     <div className="bg-brand-surface min-h-screen py-8">
@@ -135,6 +236,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                     setSelectedDistrict('');
                     setSelectedCategory('');
                     setSelectedSubCategory('');
+                    setSelectedRadius(null);
                   }}
                   className="text-xs text-red-500 font-bold hover:underline"
                 >
@@ -152,10 +254,21 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                        placeholder="Name, Skill..." 
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
-                       className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none"
+                       className="w-full pl-9 pr-3 py-2 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none bg-gray-800 text-white placeholder-gray-400 caret-white"
                      />
                      <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
                    </div>
+                 </div>
+
+                 {/* Use Real World Maps Toggle */}
+                 <div className="flex items-center justify-between bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <span className="text-xs font-bold text-brand-primary flex items-center gap-1">
+                      <MapIcon size={14} /> Google Maps
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={useRealWorldMap} onChange={(e) => setUseRealWorldMap(e.target.checked)} />
+                      <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-primary"></div>
+                    </label>
                  </div>
 
                  {/* Location */}
@@ -164,7 +277,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedState} 
                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                      className="w-full p-2 border border-gray-200 rounded-lg text-sm mb-2"
+                      className="w-full p-2 border border-gray-600 rounded-lg text-sm mb-2 bg-gray-800 text-white"
                    >
                      <option value="">All States</option>
                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
@@ -173,11 +286,37 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                       value={selectedDistrict} 
                       onChange={(e) => setSelectedDistrict(e.target.value)}
                       disabled={!selectedState}
-                      className="w-full p-2 border border-gray-200 rounded-lg text-sm disabled:bg-gray-50"
+                      className="w-full p-2 border border-gray-600 rounded-lg text-sm disabled:bg-gray-700 disabled:text-gray-500 bg-gray-800 text-white"
                    >
                      <option value="">All Districts</option>
                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                    </select>
+                 </div>
+
+                 {/* Distance Filter (NEW) */}
+                 <div>
+                   <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex justify-between">
+                     Distance 
+                     {isLocating && <span className="text-brand-primary animate-pulse">Locating...</span>}
+                   </label>
+                   <select 
+                      value={selectedRadius !== null ? selectedRadius : 'all'}
+                      onChange={handleRadiusChange}
+                      className="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-white"
+                   >
+                     <option value="all">All India</option>
+                     <option value="5">5 km</option>
+                     <option value="10">10 km</option>
+                     <option value="25">25 km</option>
+                     <option value="50">50 km</option>
+                     <option value="100">100 km</option>
+                   </select>
+                   {locationError && <p className="text-[10px] text-red-500 mt-1">{locationError}</p>}
+                   {userCoords && selectedRadius && (
+                     <p className="text-[10px] text-green-600 mt-1 flex items-center">
+                       <CheckCircle size={10} className="mr-1" /> Location Detected
+                     </p>
+                   )}
                  </div>
 
                  {/* Category */}
@@ -186,7 +325,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedCategory} 
                       onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubCategory(''); }}
-                      className="w-full p-2 border border-gray-200 rounded-lg text-sm mb-2"
+                      className="w-full p-2 border border-gray-600 rounded-lg text-sm mb-2 bg-gray-800 text-white"
                    >
                      <option value="">All Categories</option>
                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -196,7 +335,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      <select 
                         value={selectedSubCategory} 
                         onChange={(e) => setSelectedSubCategory(e.target.value)}
-                        className="w-full p-2 border border-gray-200 rounded-lg text-sm animate-fade-in"
+                        className="w-full p-2 border border-gray-600 rounded-lg text-sm animate-fade-in bg-gray-800 text-white"
                      >
                        <option value="">All Sub-categories</option>
                        {subCategories.map(sc => <option key={sc} value={sc}>{sc}</option>)}
@@ -210,7 +349,10 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
           {/* Results Area */}
           <div className="lg:w-3/4">
             <div className="mb-4 flex justify-between items-center">
-               <p className="text-sm text-gray-500">Showing <strong>{filteredArtists.length}</strong> artists</p>
+               <p className="text-sm text-gray-500">
+                 Showing <strong>{useRealWorldMap ? realWorldPlaces.length : filteredArtists.length}</strong> results
+                 {useRealWorldMap && <span className="ml-2 text-brand-primary font-bold">(Google Maps Data)</span>}
+               </p>
                <div className="flex items-center gap-2">
                  <span className="text-xs font-bold text-gray-500">Sort By:</span>
                  <select className="text-xs border-none bg-transparent font-bold text-brand-textMain focus:ring-0 cursor-pointer">
@@ -221,32 +363,71 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                </div>
             </div>
 
-            {filteredArtists.length > 0 ? (
+            {/* REAL WORLD RESULTS */}
+            {useRealWorldMap ? (
               <div className="space-y-4">
-                {filteredArtists.map(artist => (
-                  <ArtistListCard key={artist.id} artist={artist} />
-                ))}
+                {isLoadingPlaces ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <div className="animate-spin w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+                    Searching Google Maps...
+                  </div>
+                ) : realWorldPlaces.length > 0 ? (
+                  realWorldPlaces.map((place, idx) => (
+                    <div key={idx} className="bg-white p-4 rounded-card shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
+                       <div className="w-16 h-16 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                         <MapPin className="text-brand-primary" />
+                       </div>
+                       <div className="flex-grow">
+                         <h3 className="font-bold text-brand-textMain">{place.title}</h3>
+                         <p className="text-sm text-gray-500 mb-2">{place.formattedAddress}</p>
+                         <a href={place.sourceUri} target="_blank" rel="noreferrer" className="text-xs text-brand-primary font-bold hover:underline flex items-center">
+                           View on Google Maps <Navigation size={10} className="ml-1" />
+                         </a>
+                       </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-10 bg-white rounded-card">
+                    <p className="text-gray-500">No Google Maps results found. Try a specific search term.</p>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="bg-white p-12 rounded-card text-center shadow-sm">
-                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                    <Search size={32} />
-                 </div>
-                 <h3 className="text-lg font-bold text-gray-800">No artists found</h3>
-                 <p className="text-gray-500">Try adjusting your filters or search terms.</p>
-                 <button 
-                    onClick={() => {
-                        setSearchTerm('');
-                        setSelectedState('');
-                        setSelectedDistrict('');
-                        setSelectedCategory('');
-                        setSelectedSubCategory('');
-                    }}
-                    className="mt-4 text-brand-primary font-bold hover:underline"
-                 >
-                   Clear All Filters
-                 </button>
-              </div>
+              /* INTERNAL DIRECTORY RESULTS */
+              filteredArtists.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredArtists.map(artist => (
+                    <ArtistListCard key={artist.id} artist={artist} />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white p-12 rounded-card text-center shadow-sm">
+                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                      <Search size={32} />
+                   </div>
+                   <h3 className="text-lg font-bold text-gray-800">No artists found</h3>
+                   <p className="text-gray-500">Try adjusting your filters, search terms, or increasing the distance.</p>
+                   {selectedRadius && (
+                     <p className="text-xs text-orange-500 mt-2 font-medium flex items-center justify-center">
+                       <AlertCircle size={12} className="mr-1" />
+                       You are filtering within {selectedRadius} km. Try 'All India'.
+                     </p>
+                   )}
+                   <button 
+                      onClick={() => {
+                          setSearchTerm('');
+                          setSelectedState('');
+                          setSelectedDistrict('');
+                          setSelectedCategory('');
+                          setSelectedSubCategory('');
+                          setSelectedRadius(null);
+                      }}
+                      className="mt-4 text-brand-primary font-bold hover:underline"
+                   >
+                     Clear All Filters
+                   </button>
+                </div>
+              )
             )}
           </div>
         </div>
