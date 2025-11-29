@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, MapPin, Filter, Mic, Camera, Music, Video, User, 
-  CheckCircle, Star, Map as MapIcon, List, X, ChevronDown, Heart, Sparkles, Tag, Briefcase, Navigation, AlertCircle
+  CheckCircle, Star, Map as MapIcon, List, X, ChevronDown, Heart, Sparkles, Tag, Briefcase, Navigation, AlertCircle, Globe
 } from 'lucide-react';
 import { DIRECTORY_ARTISTS, LOCATION_DATA, CATEGORIES, SUBCATEGORIES } from '../constants';
 import { DirectoryArtist, LocationDistrict, BadgeType, PageData } from '../types';
 import { useNotifications } from '../contexts/NotificationContext';
 import FollowButton from './FollowButton';
+import { searchRealWorldPlaces, MapPlace } from '../services/genai';
 
 interface DirectoryProps {
   initialFilters?: PageData;
@@ -73,6 +74,11 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
   const [isLoadingNearby, setIsLoadingNearby] = useState(false);
   const [showNearbyBanner, setShowNearbyBanner] = useState(false);
 
+  // --- Real World Google Maps Search State ---
+  const [useGoogleMaps, setUseGoogleMaps] = useState(false);
+  const [isSearchingMaps, setIsSearchingMaps] = useState(false);
+  const [mapPlaces, setMapPlaces] = useState<MapPlace[]>([]);
+
   // Notification Context
   const { addNotification } = useNotifications();
 
@@ -98,12 +104,16 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
       if (initialFilters.manualLocation) {
         // Just focus on state dropdown logic - handled by user UI
       }
+
+      if (initialFilters.viewMap) {
+        setViewMode('map');
+      }
     }
   }, [initialFilters]);
 
   // --- Smart Triggers for Notifications ---
   useEffect(() => {
-    if (viewMode === 'map') {
+    if (viewMode === 'map' && !useGoogleMaps) {
       const timer = setTimeout(() => {
         addNotification({
           title: "Explore Nearby",
@@ -119,7 +129,7 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
   }, [viewMode]);
 
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCategory && !useGoogleMaps) {
       const timer = setTimeout(() => {
         addNotification({
           title: `Top ${selectedCategory}s`,
@@ -153,9 +163,9 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
         if (sortOption === 'Recommended') setSortOption('Distance');
       },
       (error) => {
-        console.error("Error detecting location:", error);
+        console.error("Error detecting location:", error.message);
         setIsLocating(false);
-        setLocationError("Location access denied.");
+        setLocationError(`Location access denied: ${error.message}`);
         setSearchRadius('All'); // Reset if failed
       }
     );
@@ -167,6 +177,32 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
       detectUserLocation();
     }
   };
+
+  // --- Google Maps Grounding Search ---
+  const handleGoogleMapsSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearchingMaps(true);
+    setMapPlaces([]);
+    
+    // Construct a context-aware query
+    let finalQuery = searchQuery;
+    if (selectedDistrict) finalQuery += ` in ${selectedDistrict}`;
+    else if (selectedState) finalQuery += ` in ${selectedState}`;
+    
+    const places = await searchRealWorldPlaces(finalQuery, userLocation?.lat, userLocation?.lng);
+    setMapPlaces(places);
+    setIsSearchingMaps(false);
+  };
+
+  useEffect(() => {
+    if (useGoogleMaps && searchQuery) {
+      // Debounce search if needed, or rely on manual Enter/Button
+      // For now, let's trigger on mode switch if query exists
+      handleGoogleMapsSearch();
+    }
+  }, [useGoogleMaps]);
+
 
   // --- Derived Data for Cascading Dropdowns ---
   const districts = useMemo(() => {
@@ -183,7 +219,7 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
 
   // --- Smart Search Suggestions Logic ---
   const smartSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+    if (!searchQuery.trim() || useGoogleMaps) return []; // Disable internal suggestions if using Google Maps mode
     const q = searchQuery.toLowerCase();
     
     interface Suggestion {
@@ -213,11 +249,13 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
         const typeOrder = { category: 1, location: 2, artist: 3 };
         return typeOrder[a.type] - typeOrder[b.type];
     }).slice(0, 6);
-  }, [searchQuery]);
+  }, [searchQuery, useGoogleMaps]);
 
 
   // --- Filter & AI Sort Logic ---
   const filteredArtists = useMemo(() => {
+    if (useGoogleMaps) return []; // Internal filter logic bypassed when using Google Maps
+
     let result = DIRECTORY_ARTISTS.map(artist => {
       // Calculate distance if user location is available
       let dist = null;
@@ -308,7 +346,7 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
 
     return result;
 
-  }, [searchQuery, selectedState, selectedDistrict, selectedBlock, selectedPincode, selectedCategory, selectedSubcategory, activeFilters, minPrice, maxPrice, minExperience, maxExperience, minRating, availabilityFilter, skillTags, sortOption, searchRadius, userLocation]);
+  }, [searchQuery, selectedState, selectedDistrict, selectedBlock, selectedPincode, selectedCategory, selectedSubcategory, activeFilters, minPrice, maxPrice, minExperience, maxExperience, minRating, availabilityFilter, skillTags, sortOption, searchRadius, userLocation, useGoogleMaps]);
 
   const displayedArtists = filteredArtists.slice(0, itemsToShow);
 
@@ -317,19 +355,6 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
     setActiveFilters(prev => 
       prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
     );
-  };
-
-  const handleAddSkillTag = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && newSkillTag.trim()) {
-      if (!skillTags.includes(newSkillTag.trim())) {
-        setSkillTags([...skillTags, newSkillTag.trim()]);
-      }
-      setNewSkillTag('');
-    }
-  };
-
-  const removeSkillTag = (tagToRemove: string) => {
-    setSkillTags(skillTags.filter(tag => tag !== tagToRemove));
   };
 
   const getCategoryIcon = (category: string) => {
@@ -381,6 +406,28 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
       alert("Voice search is not supported.");
     }
   };
+
+  // --- Map Place Card (for Google Results) ---
+  const MapPlaceCard: React.FC<{ place: MapPlace }> = ({ place }) => (
+    <div className="bg-white rounded-card shadow-card hover:shadow-card-hover border border-transparent hover:border-blue-300 transition-all duration-300 p-4 flex flex-col animate-fade-in group">
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-bold text-brand-textMain text-lg line-clamp-1">{place.title}</h3>
+        <div className="bg-blue-50 text-brand-primary p-1.5 rounded-full">
+          <Globe size={16} />
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mb-3 flex items-start gap-1">
+        <MapPin size={12} className="mt-0.5 flex-shrink-0" />
+        <span className="line-clamp-2">{place.formattedAddress}</span>
+      </p>
+      <div className="mt-auto pt-3 border-t border-gray-100 flex gap-2">
+        {place.sourceUri && (
+          <a href={place.sourceUri} target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-brand-surface text-brand-textMain py-2 rounded text-xs font-bold hover:bg-gray-200 transition">View on Map</a>
+        )}
+        <button className="flex-1 bg-brand-primary text-white py-2 rounded text-xs font-bold hover:bg-brand-primaryDark transition">Contact</button>
+      </div>
+    </div>
+  );
 
   // --- Artist Card with Distance ---
   const ArtistListCard: React.FC<{ artist: any }> = ({ artist }) => (
@@ -455,12 +502,12 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
       {/* 1. Global Search Header */}
       <div className="bg-brand-textMain shadow-md border-b border-gray-700 sticky top-16 z-30">
         <div className="container mx-auto px-4 py-6">
-          <div className="relative max-w-4xl mx-auto">
-            <div className="relative">
+          <div className="relative max-w-4xl mx-auto flex gap-2">
+            <div className="relative flex-grow">
               <Search className="absolute left-4 top-4 text-gray-400" size={20} />
               <input 
                 type="text"
-                placeholder="Search 'Singer in Jaipur', 'Recording Studio', or 'Name'..."
+                placeholder={useGoogleMaps ? "Search real places (e.g. 'Music Academy in Delhi')" : "Search 'Singer in Jaipur', 'Recording Studio', or 'Name'..."}
                 className="w-full pl-12 pr-24 py-4 rounded-full border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none shadow-lg transition-all caret-white"
                 value={searchQuery}
                 onChange={(e) => {
@@ -468,6 +515,9 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
                   setShowSuggestions(e.target.value.length > 0);
                 }}
                 onFocus={() => setShowSuggestions(searchQuery.length > 0)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && useGoogleMaps) handleGoogleMapsSearch();
+                }}
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <button 
@@ -484,8 +534,22 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
               </div>
             </div>
             
-            {/* Suggestions Render (Same as before) */}
-            {showSuggestions && smartSuggestions.length > 0 && (
+            {/* Google Maps Toggle Button */}
+            <button 
+              onClick={() => setUseGoogleMaps(!useGoogleMaps)}
+              className={`px-4 rounded-full font-bold text-xs flex flex-col items-center justify-center transition-all ${
+                useGoogleMaps 
+                  ? 'bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.5)] border-2 border-green-400' 
+                  : 'bg-gray-800 text-gray-400 border border-gray-600 hover:bg-gray-700'
+              }`}
+              title="Toggle Google Maps Grounding"
+            >
+              <Globe size={18} className="mb-0.5" />
+              <span>{useGoogleMaps ? 'Maps ON' : 'Maps OFF'}</span>
+            </button>
+            
+            {/* Suggestions Render */}
+            {showSuggestions && smartSuggestions.length > 0 && !useGoogleMaps && (
                <div className="absolute top-full left-0 right-0 bg-gray-800 text-white rounded-card shadow-2xl border border-gray-700 mt-2 p-2 z-40 max-h-80 overflow-y-auto">
                   {smartSuggestions.map((suggestion, idx) => (
                     <div 
@@ -586,7 +650,9 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
         <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-250px)]">
           {/* Left Column: Filters & List */}
           <div className={`flex flex-col gap-6 w-full ${viewMode === 'map' ? 'hidden lg:flex lg:w-1/3' : 'lg:w-1/3'}`}>
-            <div className="bg-white p-6 rounded-card shadow-card border border-gray-100 space-y-5 overflow-y-auto max-h-[75vh] no-scrollbar">
+            {/* Filters Section - Hide in Google Maps Mode */}
+            {!useGoogleMaps && (
+              <div className="bg-white p-6 rounded-card shadow-card border border-gray-100 space-y-5 overflow-y-auto max-h-[75vh] no-scrollbar">
                <div className="flex justify-between items-center mb-2">
                  <h3 className="font-bold text-brand-textMain flex items-center gap-2"><Filter size={18} /> Filters</h3>
                  <button 
@@ -667,7 +733,7 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
                     </select>
                  </div>
 
-                 {/* Price & Rating (Simplified for brevity) */}
+                 {/* Price & Rating */}
                  <div>
                     <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Budget (₹)</label>
                     <div className="flex gap-2 items-center">
@@ -682,49 +748,81 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
                  </div>
                </div>
             </div>
+            )}
 
             {/* Results Count & List */}
             <div className="flex-grow flex flex-col min-h-0">
                <div className="flex justify-between items-center mb-4 px-1">
                  <div>
-                    <h2 className="font-bold text-brand-textMain">{filteredArtists.length} Results Found</h2>
+                    {useGoogleMaps ? (
+                      <h2 className="font-bold text-brand-textMain flex items-center gap-2">
+                        <Globe size={18} className="text-green-600" />
+                        {mapPlaces.length} Real-World Places Found
+                      </h2>
+                    ) : (
+                      <h2 className="font-bold text-brand-textMain">{filteredArtists.length} Directory Results</h2>
+                    )}
                  </div>
-                 <div className="relative">
-                    <select 
-                      value={sortOption}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="appearance-none bg-gray-800 border border-gray-600 text-xs font-bold text-white py-1.5 pl-3 pr-8 rounded-lg focus:outline-none cursor-pointer shadow-sm hover:border-brand-primary"
-                    >
-                      <option>Recommended</option>
-                      <option>Distance</option>
-                      <option>Price: Low to High</option>
-                      <option>Highest Rated</option>
-                    </select>
-                    <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
-                 </div>
+                 {!useGoogleMaps && (
+                   <div className="relative">
+                      <select 
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        className="appearance-none bg-gray-800 border border-gray-600 text-xs font-bold text-white py-1.5 pl-3 pr-8 rounded-lg focus:outline-none cursor-pointer shadow-sm hover:border-brand-primary"
+                      >
+                        <option>Recommended</option>
+                        <option>Distance</option>
+                        <option>Price: Low to High</option>
+                        <option>Highest Rated</option>
+                      </select>
+                      <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
+                   </div>
+                 )}
                </div>
                
                <div className="flex-grow overflow-y-auto pr-2 space-y-4 no-scrollbar pb-20 lg:pb-0">
-                 {isLoadingNearby ? (
-                   <div className="text-center py-10">Loading nearby artists...</div>
-                 ) : displayedArtists.length > 0 ? (
-                   <>
-                     {displayedArtists.map(artist => <ArtistListCard key={artist.id} artist={artist} />)}
-                   </>
-                 ) : (
-                   <div className="text-center py-10 bg-white rounded-card shadow-sm border border-gray-100">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                        <Navigation size={32} />
-                      </div>
-                      <h3 className="text-lg font-bold text-brand-textMain mb-2">No artists found nearby</h3>
-                      <p className="text-sm text-brand-textBody mb-6 max-w-xs mx-auto">
-                        Try expanding your search radius to 50km or 100km.
-                      </p>
-                      <div className="flex gap-2 justify-center">
-                        <button onClick={() => setSearchRadius(50)} className="text-xs bg-brand-surface border border-gray-300 px-3 py-1.5 rounded font-bold hover:bg-gray-200">Expand to 50km</button>
-                        <button onClick={() => setSearchRadius('All')} className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded font-bold hover:bg-brand-primaryDark">Search All India</button>
-                      </div>
+                 {isLoadingNearby || isSearchingMaps ? (
+                   <div className="text-center py-10 space-y-3">
+                     <div className="animate-spin w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full mx-auto"></div>
+                     <p className="text-brand-textBody font-medium">{isSearchingMaps ? "Searching Google Maps..." : "Loading nearby artists..."}</p>
                    </div>
+                 ) : useGoogleMaps ? (
+                    // GOOGLE MAPS RESULTS
+                    mapPlaces.length > 0 ? (
+                      mapPlaces.map((place, idx) => (
+                        <MapPlaceCard key={place.placeId || idx} place={place} />
+                      ))
+                    ) : (
+                      <div className="text-center py-10 bg-white rounded-card shadow-sm border border-gray-100 p-6">
+                        <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                          <Globe size={32} />
+                        </div>
+                        <h3 className="text-lg font-bold text-brand-textMain mb-2">Search Real Places</h3>
+                        <p className="text-sm text-brand-textBody max-w-xs mx-auto mb-4">
+                          Enter a query above (e.g., "Recording Studio in Jaipur") and hit Enter to find real-world businesses via Google Maps.
+                        </p>
+                      </div>
+                    )
+                 ) : (
+                   // INTERNAL DIRECTORY RESULTS
+                   displayedArtists.length > 0 ? (
+                     <>
+                       {displayedArtists.map(artist => <ArtistListCard key={artist.id} artist={artist} />)}
+                     </>
+                   ) : (
+                     <div className="text-center py-10 bg-white rounded-card shadow-sm border border-gray-100">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                          <Navigation size={32} />
+                        </div>
+                        <h3 className="text-lg font-bold text-brand-textMain mb-2">No artists found</h3>
+                        <p className="text-sm text-brand-textBody mb-6 max-w-xs mx-auto">
+                          Try expanding your search or try the "Maps Grounding" toggle for real-world results.
+                        </p>
+                        <div className="flex gap-2 justify-center">
+                          <button onClick={() => setSearchRadius('All')} className="text-xs bg-brand-primary text-white px-3 py-1.5 rounded font-bold hover:bg-brand-primaryDark">Search All India</button>
+                        </div>
+                     </div>
+                   )
                  )}
                </div>
             </div>
@@ -739,28 +837,46 @@ const Directory: React.FC<DirectoryProps> = ({ initialFilters }) => {
                </div>
                
                {/* Use My Location Button */}
-               <button onClick={detectUserLocation} className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg z-10 hover:bg-gray-50 text-brand-primary" title="Use My Location">
-                 <Navigation size={20} className={isLocating ? 'animate-spin' : ''} />
-               </button>
+               {!useGoogleMaps && (
+                 <button onClick={detectUserLocation} className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg z-10 hover:bg-gray-50 text-brand-primary" title="Use My Location">
+                   <Navigation size={20} className={isLocating ? 'animate-spin' : ''} />
+                 </button>
+               )}
                
-               {/* Markers */}
-               {displayedArtists.map(artist => (
-                 <div 
-                   key={artist.id}
-                   className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 hover:scale-110 z-0 hover:z-20"
-                   style={{ top: `${artist.lat}%`, left: `${artist.lng}%` }}
-                   onClick={() => setSelectedMapArtist(artist)}
-                 >
-                   <div className={`w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white ${
-                      artist.category.includes('Singer') ? 'bg-red-500' : 'bg-brand-primary'
-                   }`}>
-                      {getCategoryIcon(artist.category)}
-                   </div>
+               {/* Markers - Conditional Rendering based on Mode */}
+               {useGoogleMaps ? (
+                 // Real World Map Pins (Simulated positions since we don't have a real interactive map)
+                 // In a real app, these would be markers on a Google Map component.
+                 // Here we just show a message or list visualizer for demo.
+                 <div className="absolute inset-0 flex items-center justify-center bg-green-50/50 backdrop-blur-sm">
+                    <div className="text-center">
+                      <Globe size={48} className="text-green-600 mx-auto mb-4 animate-bounce" />
+                      <h3 className="text-xl font-bold text-brand-textMain">Real-World Map Mode</h3>
+                      <p className="text-gray-600 max-w-md mx-auto mt-2">
+                        In a full implementation, the {mapPlaces.length} results found via Google Maps would be plotted here on an interactive map.
+                      </p>
+                    </div>
                  </div>
-               ))}
+               ) : (
+                 // Internal Directory Pins
+                 displayedArtists.map(artist => (
+                   <div 
+                     key={artist.id}
+                     className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 hover:scale-110 z-0 hover:z-20"
+                     style={{ top: `${artist.lat}%`, left: `${artist.lng}%` }}
+                     onClick={() => setSelectedMapArtist(artist)}
+                   >
+                     <div className={`w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white ${
+                        artist.category.includes('Singer') ? 'bg-red-500' : 'bg-brand-primary'
+                     }`}>
+                        {getCategoryIcon(artist.category)}
+                     </div>
+                   </div>
+                 ))
+               )}
                
                {/* Popup */}
-               {selectedMapArtist && (
+               {selectedMapArtist && !useGoogleMaps && (
                  <div className="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-80 bg-white rounded-card shadow-2xl p-4 z-30 animate-fade-in-up border border-gray-100">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setSelectedMapArtist(null); }}

@@ -2,6 +2,7 @@
   "name": " Artists Guru",
   "description": "A comprehensive platform connecting artists, studios, and organizers across India. Powered by Meri Pahal Fast Help Artist Welfare Association.",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "geolocation"
   ]
 }

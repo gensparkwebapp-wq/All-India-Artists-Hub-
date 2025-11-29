@@ -90,7 +90,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
         }, 1500); // 1.5s delay for realism
       },
       (error) => {
-        console.error("Location error:", error);
+        console.error("Location error:", error.message);
         setIsDetectingLocation(false);
         setShowLocationError(true);
       }
@@ -155,10 +155,10 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                       Retry
                     </button>
                     <button 
-                      onClick={() => onNavigate && onNavigate('directory', { manualLocation: true })}
+                      onClick={() => onNavigate && onNavigate('directory', { viewMap: true })}
                       className="bg-brand-primary text-white px-3 py-1.5 rounded text-xs font-bold"
                     >
-                      Enter Manually
+                      Search on Map
                     </button>
                   </div>
                 </div>
