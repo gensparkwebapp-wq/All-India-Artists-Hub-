@@ -14,6 +14,7 @@ export interface ArtistProfile {
   imageUrl: string;
   badge?: BadgeType;
   followers?: string;
+  isFollowed?: boolean;
 }
 
 export interface Studio {

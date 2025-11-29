@@ -7,6 +7,7 @@ import {
 import { DIRECTORY_ARTISTS, LOCATION_DATA, CATEGORIES, SUBCATEGORIES } from '../constants';
 import { DirectoryArtist, LocationDistrict, BadgeType } from '../types';
 import { useNotifications } from '../contexts/NotificationContext';
+import FollowButton from './FollowButton';
 
 const Directory: React.FC = () => {
   // --- Search & Filter State ---
@@ -215,6 +216,12 @@ const Directory: React.FC = () => {
       if (activeFilters.includes('Verified Artists Only') && !artist.verified) return false;
       if (activeFilters.includes('Top Rated') && artist.rating < 4.5) return false;
       if (activeFilters.includes('Affordable') && (artist.startingPrice || 0) > 10000) return false;
+      if (activeFilters.includes('New Joiners')) {
+         if (!artist.joinedDate || new Date(artist.joinedDate) < new Date('2023-01-01')) return false;
+      }
+      if (activeFilters.includes('Available Now')) {
+         if (artist.availability === 'Offline') return false; 
+      }
 
       return true;
     });
@@ -396,6 +403,7 @@ const Directory: React.FC = () => {
             <div className="font-bold text-brand-primary">₹{artist.startingPrice?.toLocaleString()}</div>
           </div>
           <div className="flex gap-2">
+             <FollowButton artistId={artist.id} artistName={artist.name} initialIsFollowing={artist.isFollowed} compact />
              <button className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-surface text-brand-textMain hover:bg-gray-200 transition">View Profile</button>
              <button className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-primary text-white hover:bg-brand-primaryDark transition shadow-md hover:-translate-y-0.5">Book Now</button>
           </div>
@@ -516,7 +524,7 @@ const Directory: React.FC = () => {
             {/* 2. Cascading Filters */}
             <div className="bg-white p-6 rounded-card shadow-card border border-gray-100 space-y-5 overflow-y-auto max-h-[75vh] no-scrollbar">
                <div className="flex justify-between items-center mb-2">
-                 <h3 className="font-bold text-brand-textHeading flex items-center gap-2"><Filter size={18} /> Filters</h3>
+                 <h3 className="font-bold text-brand-textMain flex items-center gap-2"><Filter size={18} /> Filters</h3>
                  <button 
                    onClick={() => {
                      setSelectedState(''); setSelectedDistrict(''); setSelectedBlock(''); setSelectedPincode('');
@@ -535,12 +543,12 @@ const Directory: React.FC = () => {
                <div className="space-y-4">
                  {/* Category & Subcategory */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block uppercase">Artist Category</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-1 block uppercase">Artist Category</label>
                     <div className="relative">
                       <select 
                         value={selectedCategory} 
                         onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubcategory(''); }}
-                        className="w-full appearance-none bg-brand-surface border border-gray-200 text-brand-textMain text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
+                        className="w-full appearance-none bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
                       >
                         <option value="">All Categories</option>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -551,12 +559,12 @@ const Directory: React.FC = () => {
 
                  {subcategories.length > 0 && (
                    <div className="animate-fade-in">
-                      <label className="text-xs font-bold text-gray-500 mb-1 block uppercase">Sub-Category</label>
+                      <label className="text-xs font-bold text-brand-textSub mb-1 block uppercase">Sub-Category</label>
                       <div className="relative">
                         <select 
                           value={selectedSubcategory} 
                           onChange={(e) => setSelectedSubcategory(e.target.value)}
-                          className="w-full appearance-none bg-brand-surface border border-gray-200 text-brand-textMain text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
+                          className="w-full appearance-none bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
                         >
                           <option value="">Select Specialization</option>
                           {subcategories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -568,13 +576,13 @@ const Directory: React.FC = () => {
 
                  {/* Locations */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block uppercase">Location</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-1 block uppercase">Location</label>
                     <div className="space-y-2">
                        <div className="relative">
                          <select 
                            value={selectedState} 
                            onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); setSelectedBlock(''); }}
-                           className="w-full appearance-none bg-brand-surface border border-gray-200 text-brand-textMain text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
+                           className="w-full appearance-none bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none"
                          >
                            <option value="">Select State</option>
                            {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
@@ -587,7 +595,7 @@ const Directory: React.FC = () => {
                            value={selectedDistrict} 
                            onChange={(e) => { setSelectedDistrict(e.target.value); setSelectedBlock(''); }}
                            disabled={!selectedState}
-                           className="w-full appearance-none bg-brand-surface border border-gray-200 text-brand-textMain text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50"
+                           className="w-full appearance-none bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50"
                          >
                            <option value="">Select District</option>
                            {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
@@ -600,7 +608,7 @@ const Directory: React.FC = () => {
                            value={selectedBlock} 
                            onChange={(e) => setSelectedBlock(e.target.value)}
                            disabled={!selectedDistrict}
-                           className="w-full appearance-none bg-brand-surface border border-gray-200 text-brand-textMain text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50"
+                           className="w-full appearance-none bg-gray-800 border border-gray-600 text-white text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50"
                          >
                            <option value="">Select Block / Tehsil</option>
                            {blocks.map(b => <option key={b} value={b}>{b}</option>)}
@@ -613,20 +621,20 @@ const Directory: React.FC = () => {
                          placeholder="Pincode (e.g. 302029)" 
                          value={selectedPincode}
                          onChange={(e) => setSelectedPincode(e.target.value)}
-                         className="w-full text-sm p-2.5 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                         className="w-full text-sm p-2.5 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                        />
                     </div>
                  </div>
 
                  {/* Availability Toggle */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-2 block uppercase">Availability</label>
-                    <div className="flex bg-brand-surface rounded-lg p-1 border border-gray-200">
+                    <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Availability</label>
+                    <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-600">
                       {['Any', 'Online', 'Offline'].map(opt => (
                         <button
                           key={opt}
                           onClick={() => setAvailabilityFilter(opt)}
-                          className={`flex-1 py-1.5 text-xs font-bold rounded-md transition ${availabilityFilter === opt ? 'bg-white shadow text-brand-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-md transition ${availabilityFilter === opt ? 'bg-brand-primary text-white shadow' : 'text-gray-400 hover:text-white'}`}
                         >
                           {opt}
                         </button>
@@ -636,13 +644,13 @@ const Directory: React.FC = () => {
 
                  {/* Rating Min Filter */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-2 block uppercase">Min Rating</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Min Rating</label>
                     <div className="flex gap-2">
                        {[4, 3, 2, 0].map((star) => (
                          <button
                            key={star}
                            onClick={() => setMinRating(star)}
-                           className={`px-3 py-1.5 text-xs rounded-lg border transition ${minRating === star ? 'bg-brand-primary text-white border-brand-primary' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                           className={`px-3 py-1.5 text-xs rounded-lg border transition ${minRating === star ? 'bg-brand-primary text-white border-brand-primary' : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'}`}
                          >
                            {star === 0 ? 'Any' : <span className="flex items-center gap-1">{star}+ <Star size={10} fill="currentColor"/></span>}
                          </button>
@@ -652,14 +660,14 @@ const Directory: React.FC = () => {
 
                  {/* Experience Range */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-2 block uppercase">Experience (Years)</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Experience (Years)</label>
                     <div className="flex gap-2 items-center">
                       <input 
                         type="number" 
                         placeholder="Min" 
                         value={minExperience}
                         onChange={(e) => setMinExperience(e.target.value ? Number(e.target.value) : '')}
-                        className="w-1/2 text-sm p-2 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                        className="w-1/2 text-sm p-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                       />
                       <span className="text-gray-400">-</span>
                       <input 
@@ -667,21 +675,21 @@ const Directory: React.FC = () => {
                         placeholder="Max" 
                         value={maxExperience}
                         onChange={(e) => setMaxExperience(e.target.value ? Number(e.target.value) : '')}
-                        className="w-1/2 text-sm p-2 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                        className="w-1/2 text-sm p-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                       />
                     </div>
                  </div>
 
                  {/* Price Range */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-2 block uppercase">Budget (₹)</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Budget (₹)</label>
                     <div className="flex gap-2 items-center">
                       <input 
                         type="number" 
                         placeholder="Min" 
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : '')}
-                        className="w-1/2 text-sm p-2 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                        className="w-1/2 text-sm p-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                       />
                       <span className="text-gray-400">-</span>
                       <input 
@@ -689,14 +697,14 @@ const Directory: React.FC = () => {
                         placeholder="Max" 
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : '')}
-                        className="w-1/2 text-sm p-2 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                        className="w-1/2 text-sm p-2 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                       />
                     </div>
                  </div>
                  
                  {/* Skill Tags */}
                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-2 block uppercase">Skills (Type & Enter)</label>
+                    <label className="text-xs font-bold text-brand-textSub mb-2 block uppercase">Skills (Type & Enter)</label>
                     <div className="relative">
                       <input 
                          type="text" 
@@ -704,7 +712,7 @@ const Directory: React.FC = () => {
                          onChange={(e) => setNewSkillTag(e.target.value)}
                          onKeyDown={handleAddSkillTag}
                          placeholder="e.g. Guitar, Classical..."
-                         className="w-full text-sm p-2 pl-8 border border-gray-200 rounded-lg bg-brand-surface focus:outline-none focus:border-brand-primary"
+                         className="w-full text-sm p-2 pl-8 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:border-brand-primary caret-white"
                       />
                       <Tag size={14} className="absolute left-2.5 top-3 text-gray-400" />
                     </div>
@@ -727,7 +735,7 @@ const Directory: React.FC = () => {
                <div className="flex justify-between items-center mb-4 px-1">
                  <div>
                     <h2 className="font-bold text-brand-textMain">{filteredArtists.length} Results Found</h2>
-                    <span className="text-xs text-gray-400">Top Rated & Verified</span>
+                    <span className="text-xs text-brand-textSub">Top Rated & Verified</span>
                  </div>
                  
                  {/* Sort Dropdown */}
@@ -735,14 +743,14 @@ const Directory: React.FC = () => {
                     <select 
                       value={sortOption}
                       onChange={(e) => setSortOption(e.target.value)}
-                      className="appearance-none bg-white border border-gray-200 text-xs font-bold text-brand-textMain py-1.5 pl-3 pr-8 rounded-lg focus:outline-none cursor-pointer shadow-sm hover:border-brand-primary"
+                      className="appearance-none bg-gray-800 border border-gray-600 text-xs font-bold text-white py-1.5 pl-3 pr-8 rounded-lg focus:outline-none cursor-pointer shadow-sm hover:border-brand-primary"
                     >
                       <option>Recommended</option>
                       <option>Price: Low to High</option>
                       <option>Price: High to Low</option>
                       <option>Highest Rated</option>
                     </select>
-                    <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-500 pointer-events-none" />
+                    <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
                  </div>
                </div>
                
@@ -796,7 +804,7 @@ const Directory: React.FC = () => {
                  <MapPin size={20} />
                </button>
                
-               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs font-bold shadow z-10 text-gray-600">
+               <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs font-bold shadow z-10 text-brand-textMain">
                  Interactive Map View
                </div>
 
@@ -841,12 +849,12 @@ const Directory: React.FC = () => {
                          </div>
                        </div>
                     </div>
-                    <div className="mt-3 text-xs text-gray-500 line-clamp-2">
+                    <div className="mt-3 text-xs text-brand-textBody line-clamp-2">
                        {selectedMapArtist.description}
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
+                       <FollowButton artistId={selectedMapArtist.id} artistName={selectedMapArtist.name} initialIsFollowing={selectedMapArtist.isFollowed} compact />
                        <button className="flex-1 bg-brand-primary text-white py-2 rounded text-xs font-bold hover:bg-brand-primaryDark transition">Book Now</button>
-                       <button className="flex-1 bg-brand-surface text-brand-textMain py-2 rounded text-xs font-bold hover:bg-gray-200 transition">Profile</button>
                     </div>
                  </div>
                )}

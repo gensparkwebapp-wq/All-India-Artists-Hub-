@@ -92,27 +92,27 @@ const About: React.FC = () => {
 
       {/* Core Values */}
       <section className="py-16 container mx-auto px-4 -mt-16 relative z-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-orange-500 text-center transform hover:-translate-y-2 transition duration-300">
             <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-orange">
               <Users size={32} />
             </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textHeading">Sangathan (Unity)</h3>
-            <p className="text-brand-textBody text-sm leading-relaxed">Uniting artists from every village, district, and state of India under one digital roof.</p>
+            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Sangathan (Unity)</h3>
+            <p className="text-brand-textBody text-base leading-relaxed">Uniting artists from every village, district, and state of India under one digital roof.</p>
           </div>
           <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-green-600 text-center transform hover:-translate-y-2 transition duration-300">
             <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-green">
               <Shield size={32} />
             </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textHeading">Suraksha (Security)</h3>
-            <p className="text-brand-textBody text-sm leading-relaxed">Providing social security, insurance, medical aid, and pension support to registered artists.</p>
+            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Suraksha (Security)</h3>
+            <p className="text-brand-textBody text-base leading-relaxed">Providing social security, insurance, medical aid, and pension support to registered artists.</p>
           </div>
           <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-[#0F62FE] text-center transform hover:-translate-y-2 transition duration-300">
              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-primary">
               <Award size={32} />
             </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textHeading">Samman (Respect)</h3>
-            <p className="text-brand-textBody text-sm leading-relaxed">Ensuring fair pay, direct bookings without middlemen, and national recognition for talent.</p>
+            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Samman (Respect)</h3>
+            <p className="text-brand-textBody text-base leading-relaxed">Ensuring fair pay, direct bookings without middlemen, and national recognition for talent.</p>
           </div>
         </div>
       </section>
@@ -125,70 +125,78 @@ const About: React.FC = () => {
           </div>
           <div className="lg:w-1/2 space-y-8">
              <span className="text-brand-primary font-bold tracking-widest uppercase text-xs bg-brand-surface px-3 py-1 rounded-full border border-gray-100">About The Movement</span>
-             <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textHeading leading-tight">Who We Are / <span className="text-brand-primary">हम कौन हैं</span></h2>
              
-             <p className="text-brand-textBody text-lg leading-relaxed font-medium">
-               Meri Pahal Fast Help Artist Welfare Association (Trust) और Sangeet Kalakar Union भारत के कलाकारों के लिए बनाया गया एक राष्ट्रीय प्लेटफ़ॉर्म और सामाजिक आंदोलन है।
-             </p>
-             <p className="text-brand-textSub text-sm italic opacity-80">
-               (Meri Pahal Fast Help Artist Welfare Association & Sangeet Kalakar Union is a national platform and social movement designed for the artists of India.)
-             </p>
+             {/* Bilingual Heading Correction */}
+             <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textMain leading-tight">
+               Who We Are / <br className="md:hidden"/> <span className="text-brand-primary">हम कौन हैं</span>
+             </h2>
+             
+             <div className="space-y-4">
+                <p className="text-brand-textBody text-lg leading-relaxed font-medium">
+                  <strong className="text-brand-textMain">Meri Pahal Fast Help Artist Welfare Association (Trust)</strong> और <strong className="text-brand-textMain">Sangeet Kalakar Union</strong> भारत के कलाकारों के लिए बनाया गया एक राष्ट्रीय प्लेटफ़ॉर्म और सामाजिक आंदोलन है।
+                </p>
+                <p className="text-brand-textBody text-base italic opacity-90">
+                  (Meri Pahal Fast Help Artist Welfare Association & Sangeet Kalakar Union is a national platform and social movement designed for the artists of India.)
+                </p>
+             </div>
 
              <div 
                ref={missionRef}
-               className="rounded-card border border-orange-200 bg-gradient-to-r from-[#fff7e6] to-[#ffecc2]"
+               className="rounded-card border border-[#0F62FE] bg-gradient-to-r from-[#f0f7ff] to-[#f7faff] mt-8"
                style={{
                  boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
-                 padding: '24px 28px'
+                 padding: '28px 32px'
                }}
              >
                <h4 className="font-bold text-brand-textMain mb-6 text-lg">हमारा उद्देश्य है (Our Mission):</h4>
-               <ul className="space-y-4">
+               <ul className="space-y-5">
                  <li 
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`} 
-                    style={{ transitionDelay: '100ms' }}
-                 >
-                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
-                   <div>
-                     <span className="text-brand-textMain text-base">कलाकारों को <span className="font-bold text-brand-primary">पहचान</span> देना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal">(Giving Identity)</span>
-                   </div>
-                 </li>
-                 <li 
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`} 
+                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
                     style={{ transitionDelay: '200ms' }}
                  >
                    <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
                    <div>
-                     <span className="text-brand-textMain text-base"><span className="font-bold text-brand-primary">कानूनी और सामाजिक सुरक्षा</span> उपलब्ध कराना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal">(Legal & Social Security)</span>
+                     <span className="text-brand-textMain text-base font-bold">कलाकारों को पहचान देना</span>
+                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Giving Identity)</span>
                    </div>
                  </li>
                  <li 
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`} 
-                    style={{ transitionDelay: '300ms' }}
+                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
+                    style={{ transitionDelay: '400ms' }}
                  >
                    <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
                    <div>
-                     <span className="text-brand-textMain text-base"><span className="font-bold text-brand-primary">रोजगार और अवसरों</span> से जोड़ना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal">(Connecting with Jobs)</span>
+                     <span className="text-brand-textMain text-base font-bold">कानूनी और सामाजिक सुरक्षा उपलब्ध कराना</span>
+                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Legal & Social Security)</span>
                    </div>
                  </li>
                  <li 
-                    className={`flex items-start gap-4 transition-all duration-700 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`} 
-                    style={{ transitionDelay: '400ms' }}
+                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
+                    style={{ transitionDelay: '600ms' }}
+                 >
+                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
+                   <div>
+                     <span className="text-brand-textMain text-base font-bold">रोजगार और अवसरों से जोड़ना</span>
+                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Connecting with Jobs)</span>
+                   </div>
+                 </li>
+                 <li 
+                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
+                    style={{ transitionDelay: '800ms' }}
                  >
                    <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-orange" size={22}/> 
                    <div>
-                     <span className="text-brand-textMain text-base font-semibold">और सबसे अहम — कलाकारों को <span className="font-bold text-brand-primary">सम्मान और अधिकार</span> दिलाना।</span>
+                     <span className="text-brand-textMain text-base font-bold text-brand-primary">और सबसे अहम — कलाकारों को सम्मान और अधिकार दिलाना।</span>
                    </div>
                  </li>
                </ul>
              </div>
 
-             <p className="text-brand-textBody leading-relaxed border-l-[6px] border-[#0F62FE] pl-6 py-4 bg-blue-50/50 rounded-r-lg">
-               यह मंच संगीतकारों, गायकों, नर्तकों, यूट्यूब कलाकारों, बॉलीवुड कलाकारों, जूनियर आर्टिस्ट्स, स्टूडियो, लाइव साउंड टीम, DJs, इवेंट मैनेजर्स और सभी कला क्षेत्रों के लिए खुला है।
-             </p>
+             <div className="bg-blue-50 border-l-[6px] border-[#0F62FE] pl-6 py-5 rounded-r-lg">
+                <p className="text-brand-textHeading leading-relaxed font-medium">
+                  यह मंच संगीतकारों, गायकों, नर्तकों, यूट्यूब कलाकारों, बॉलीवुड कलाकारों, जूनियर आर्टिस्ट्स, स्टूडियो, लाइव साउंड टीम, DJs, इवेंट मैनेजर्स और सभी कला क्षेत्रों के लिए खुला है।
+                </p>
+             </div>
 
              <button className="bg-brand-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-brand-primaryDark transition mt-4 hover:-translate-y-1">
                Download Trust Brochure
@@ -201,19 +209,19 @@ const About: React.FC = () => {
       <section className="py-24 bg-brand-surface">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center justify-center p-3 bg-red-50 rounded-full mb-6 text-red-600 border border-red-100">
-               <AlertTriangle size={28} />
+            <div className="inline-flex items-center justify-center p-3 bg-brand-warningBg rounded-full mb-6 text-brand-warning border border-red-100">
+               <AlertTriangle size={32} />
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textHeading mb-5">
-              Why This Union Exists / <span className="text-red-600">बदलाव की ज़रूरत क्यों?</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textMain mb-6">
+              Why This Union Exists / <span className="text-brand-warning">बदलाव की ज़रूरत क्यों?</span>
             </h2>
-            <p className="text-lg text-brand-textSub max-w-2xl mx-auto">
-              भारत में लाखों कलाकारों को ये चुनौतियाँ झेलनी पड़ती हैं: <br/>
-              <span className="text-brand-textBody text-sm font-normal">(Millions of artists in India face these challenges)</span>
+            <p className="text-lg text-brand-textHeading max-w-2xl mx-auto font-medium">
+              भारत में लाखों कलाकारों को ये चुनौतियाँ झेलनी पड़ती हैं: 
             </p>
+            <p className="text-brand-textBody text-sm mt-1">(Millions of artists in India face these challenges)</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             {[
               { title: "उचित भुगतान नहीं मिलता", sub: "(Unfair pay structures)" },
               { title: "एजेंट और मिडल-मैन द्वारा शोषण", sub: "(Exploitation by middlemen)" },
@@ -221,13 +229,13 @@ const About: React.FC = () => {
               { title: "Skill development की कमी", sub: "(Lack of verified identity & skills)" },
               { title: "कोई राष्ट्रीय Artist Protection Law नहीं", sub: "(No national Artist Protection Law)", full: true }
             ].map((item, idx) => (
-              <div key={idx} className={`bg-white p-8 rounded-card shadow-card border border-transparent flex items-start gap-5 hover:shadow-card-hover transition hover:-translate-y-1 ${item.full ? 'md:col-span-2 lg:col-span-2' : ''}`}>
-                <div className="bg-red-50 p-2 rounded-full flex-shrink-0">
-                  <XCircle className="text-red-500" size={24} />
+              <div key={idx} className={`bg-white p-8 rounded-card shadow-card border border-transparent flex items-start gap-5 hover:shadow-card-hover transition hover:-translate-y-1 ${item.full ? 'md:col-span-2 lg:col-span-2 justify-center' : ''}`}>
+                <div className="bg-brand-warningBg p-3 rounded-full flex-shrink-0">
+                  <XCircle className="text-brand-warning" size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-brand-textMain text-lg mb-1">{item.title}</h4>
-                  <p className="text-brand-textBody text-sm font-medium">{item.sub}</p>
+                  <h4 className="font-bold text-brand-textMain text-lg mb-2">{item.title}</h4>
+                  <p className="text-brand-textBody text-sm font-normal">{item.sub}</p>
                 </div>
               </div>
             ))}
@@ -253,9 +261,9 @@ const About: React.FC = () => {
                 { title: "Skill Development", desc: "Workshops and training to upgrade artistic skills." }
               ].map((obj, i) => (
                 <div key={i} className="bg-brand-surface p-8 rounded-card shadow-card hover:shadow-card-hover transition hover:-translate-y-1 border border-transparent">
-                   <div className="w-12 h-12 bg-[#E6EEFF] rounded-full flex items-center justify-center text-brand-primary font-bold mb-6 text-lg">{i+1}</div>
+                   <div className="w-14 h-14 bg-[#E6EEFF] rounded-full flex items-center justify-center text-brand-primary font-bold mb-6 text-xl shadow-sm">{i+1}</div>
                    <h4 className="font-bold text-xl mb-3 text-brand-textMain">{obj.title}</h4>
-                   <p className="text-brand-textBody text-sm leading-relaxed">{obj.desc}</p>
+                   <p className="text-brand-textBody text-base leading-relaxed">{obj.desc}</p>
                 </div>
               ))}
            </div>
@@ -279,8 +287,8 @@ const About: React.FC = () => {
       {/* CTA */}
       <section className="py-24 bg-brand-primary text-white text-center">
          <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-8">Be Part of the Movement</h2>
-            <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-8 text-white">Be Part of the Movement</h2>
+            <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto leading-relaxed text-blue-100">
               Join thousands of artists who are building a secure future with us. Registration is simple and free.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">

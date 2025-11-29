@@ -1,13 +1,14 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Hero from './Hero';
 import SectionHeading from './SectionHeading';
+import FollowButton from './FollowButton';
 import { BadgeType, LocationDistrict } from '../types';
 import { TOP_ARTISTS, STUDIOS, JOBS, TEACHERS, PRODUCTS, LOCATION_DATA, CATEGORIES, DIRECTORY_ARTISTS } from '../constants';
 import { 
   Mic, Music, Clapperboard, MonitorPlay, Speaker, 
   Map, Calendar, Users, Heart, Star, MapPin, CheckCircle, Video, PlayCircle,
-  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp
+  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 const ArtistCard: React.FC<{ artist: any; highlightBadge?: React.ReactNode }> = ({ artist, highlightBadge }) => (
@@ -29,11 +30,60 @@ const ArtistCard: React.FC<{ artist: any; highlightBadge?: React.ReactNode }> = 
         </div>
       )}
     </div>
-    <h3 className="font-bold text-brand-textHeading text-center text-base md:text-lg mb-1 group-hover:text-brand-primary transition-colors">{artist.name}</h3>
+    <h3 className="font-bold text-brand-textMain text-center text-base md:text-lg mb-1 group-hover:text-brand-primary transition-colors">{artist.name}</h3>
     <p className="text-xs text-brand-textBody text-center font-medium">{artist.category}</p>
-    <div className="flex items-center text-xs text-yellow-500 mt-2 font-semibold">
+    <div className="flex items-center text-xs text-yellow-500 mt-2 font-semibold mb-3">
       <Star size={12} fill="currentColor" className="mr-1"/> {artist.rating} • <span className="text-brand-textBody ml-1 font-normal">{artist.city}</span>
     </div>
+    
+    {/* Follow Button */}
+    <div className="w-full mt-auto">
+      <FollowButton artistId={artist.id} artistName={artist.name} initialIsFollowing={artist.isFollowed} />
+    </div>
+  </div>
+);
+
+// New Specialized Card for Trending Section (Facebook Inspired)
+const TrendingArtistCard: React.FC<{ artist: any }> = ({ artist }) => (
+  <div className="min-w-[260px] md:min-w-[280px] bg-white rounded-[14px] shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-[18px] relative group border border-transparent cursor-pointer">
+     {/* Featured Badge */}
+     <div className="absolute top-4 left-4 z-20 bg-[#FF7B00] text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md tracking-wide">
+       Trending
+     </div>
+
+     {/* Image Container */}
+     <div className="relative mb-4 overflow-hidden rounded-[12px] border-2 border-[#FFD43B] aspect-square shadow-sm">
+       <img 
+         src={artist.imageUrl} 
+         alt={artist.name} 
+         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+       />
+       {artist.badge === BadgeType.GOLDEN && (
+         <div className="absolute bottom-0 inset-x-0 bg-yellow-600/95 text-white text-[10px] font-bold text-center py-1 tracking-wider shadow-sm">
+           Prashasti Patra
+         </div>
+       )}
+     </div>
+
+     {/* Info */}
+     <div className="text-center">
+       <h3 className="font-bold text-[#111827] text-lg md:text-xl mb-1 group-hover:text-brand-primary transition-colors">{artist.name}</h3>
+       <p className="text-[#6B7280] text-sm font-medium mb-3">{artist.category}</p>
+       
+       <div className="flex items-center justify-center text-sm font-bold text-[#111827] bg-gray-50 py-1.5 px-3 rounded-full mx-auto w-fit mb-4">
+         <Star size={14} className="text-[#FACC15] fill-current mr-1.5" />
+         {artist.rating} <span className="text-gray-400 mx-1.5">•</span> {artist.city}
+       </div>
+
+       {/* Follow Button */}
+       <div className="flex justify-center w-full relative z-30">
+          <FollowButton artistId={artist.id} artistName={artist.name} initialIsFollowing={artist.isFollowed} />
+       </div>
+       
+       <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none">
+          {/* Visual indicator for interactivity */}
+       </div>
+     </div>
   </div>
 );
 
@@ -42,7 +92,7 @@ const CategoryCard = ({ icon: Icon, title, desc, color }: any) => (
     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-5 mx-auto md:mx-0 ${color} shadow-md`}>
       <Icon size={28} className="text-white" />
     </div>
-    <h3 className="font-bold text-xl mb-2 text-brand-textHeading group-hover:text-brand-primary transition">{title}</h3>
+    <h3 className="font-bold text-xl mb-2 text-brand-textMain group-hover:text-brand-primary transition">{title}</h3>
     <p className="text-sm text-brand-textBody mb-5 leading-relaxed">{desc}</p>
     <button className="text-brand-primary text-sm font-bold hover:underline underline-offset-4 flex items-center justify-center md:justify-start">
       View All Artists <span className="ml-1 text-lg leading-none">&rarr;</span>
@@ -58,7 +108,7 @@ const StudioCard: React.FC<{ studio: any }> = ({ studio }) => (
     </div>
     <div className="p-5">
       <div className="flex justify-between items-start mb-3">
-        <h4 className="font-bold text-lg text-brand-textHeading">{studio.name}</h4>
+        <h4 className="font-bold text-lg text-brand-textMain">{studio.name}</h4>
         <span className="text-xs bg-brand-surface text-brand-textBody px-2 py-1 rounded-full font-medium border border-gray-100">{studio.city}</span>
       </div>
       <p className="text-sm text-brand-textBody mb-4 line-clamp-1">{studio.services.join(', ')}</p>
@@ -95,7 +145,7 @@ const Home: React.FC = () => {
       trending: DIRECTORY_ARTISTS
         .filter(a => a.isTrending)
         .sort((a, b) => (b.views || 0) - (a.views || 0))
-        .slice(0, 5),
+        .slice(0, 8), // Increased slice for scrolling demo
 
       // 3. New Joiners (Simulated by Date - assuming mockup data has it or we pick some)
       newJoiners: DIRECTORY_ARTISTS
@@ -127,6 +177,37 @@ const Home: React.FC = () => {
 
   const displayArtists = filteredHomeArtists.slice(0, 3);
 
+  // --- Trending Carousel Logic ---
+  const trendingRef = useRef<HTMLDivElement>(null);
+  const recommendedRef = useRef<HTMLDivElement>(null);
+  const newJoinersRef = useRef<HTMLDivElement>(null);
+  
+  const scrollContainer = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const { clientWidth } = ref.current;
+      const scrollAmount = direction === 'left' ? -clientWidth / 2 : clientWidth / 2;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const scrollTrending = (direction: 'left' | 'right') => scrollContainer(trendingRef, direction);
+
+  // Auto Scroll Effect for Trending
+  useEffect(() => {
+    const interval = setInterval(() => {
+        if (trendingRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = trendingRef.current;
+            // If near end, loop back (or just stop, but request said auto scroll)
+            if (scrollLeft + clientWidth >= scrollWidth - 50) {
+                trendingRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                trendingRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+            }
+        }
+    }, 6000); // 6 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-brand-surface font-sans text-brand-textBody">
       <Hero />
@@ -147,7 +228,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* 3. AI - Recommended For You */}
-      <section className="py-12 bg-white border-b border-gray-100">
+      <section className="py-12 bg-white border-b border-gray-100 relative group/section">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
              <div className="flex items-center gap-2">
@@ -157,37 +238,83 @@ const Home: React.FC = () => {
              <a href="#" className="text-brand-primary text-sm font-bold hover:underline">View All</a>
           </div>
           
-          <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1">
-            {aiRecommendations.forYou.length > 0 ? (
-              aiRecommendations.forYou.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} />
-              ))
-            ) : (
-               <div className="text-sm text-gray-500 italic">Explore more categories to get personalized recommendations.</div>
-            )}
+          <div className="relative">
+             {/* Left Nav Button */}
+             <button 
+                onClick={() => scrollContainer(recommendedRef, 'left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Left"
+             >
+                <ChevronLeft size={20} strokeWidth={2.5} />
+             </button>
+
+            <div ref={recommendedRef} className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1 scroll-smooth">
+              {aiRecommendations.forYou.length > 0 ? (
+                aiRecommendations.forYou.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} />
+                ))
+              ) : (
+                 <div className="text-sm text-gray-500 italic">Explore more categories to get personalized recommendations.</div>
+              )}
+            </div>
+
+            {/* Right Nav Button */}
+             <button 
+                onClick={() => scrollContainer(recommendedRef, 'right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Right"
+             >
+                <ChevronRight size={20} strokeWidth={2.5} />
+             </button>
           </div>
         </div>
       </section>
 
-      {/* 4. AI - Trending Now */}
-      <section className="py-12 bg-brand-surface border-b border-gray-100">
+      {/* 4. AI - Trending Now (Redesigned Carousel) */}
+      <section className="py-12 bg-brand-surface border-b border-gray-100 relative group/section">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-2">
-                <Flame className="text-orange-500" size={24} />
-                <h3 className="font-bold text-xl text-brand-textHeading">Trending Now</h3>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+             <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-full">
+                  <Flame className="text-orange-600" size={20} fill="currentColor" />
+                </div>
+                <h3 className="font-extrabold text-2xl text-brand-textMain">Trending Now</h3>
              </div>
-             <a href="#" className="text-brand-primary text-sm font-bold hover:underline">View Leaderboard</a>
+             <a href="#" className="text-brand-primary text-sm font-bold hover:underline underline-offset-4 decoration-2">
+               View Leaderboard
+             </a>
           </div>
           
-          <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1">
-            {aiRecommendations.trending.map((artist) => (
-              <ArtistCard 
-                key={artist.id} 
-                artist={artist} 
-                highlightBadge={<span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"><Flame size={10} fill="currentColor"/> Trending</span>}
-              />
-            ))}
+          {/* Carousel Container */}
+          <div className="relative">
+             {/* Left Nav Button */}
+             <button 
+                onClick={() => scrollTrending('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Left"
+             >
+                <ChevronLeft size={24} strokeWidth={2.5} />
+             </button>
+
+             {/* Scrolling Content */}
+             <div 
+                ref={trendingRef}
+                className="flex overflow-x-auto gap-6 pb-8 pt-2 no-scrollbar snap-x px-1 scroll-smooth"
+             >
+                {aiRecommendations.trending.map((artist) => (
+                  <TrendingArtistCard key={artist.id} artist={artist} />
+                ))}
+             </div>
+
+             {/* Right Nav Button */}
+             <button 
+                onClick={() => scrollTrending('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Right"
+             >
+                <ChevronRight size={24} strokeWidth={2.5} />
+             </button>
           </div>
         </div>
       </section>
@@ -218,7 +345,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* 6. AI - New Joiners */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white relative group/section">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
              <div className="flex items-center gap-2">
@@ -228,14 +355,32 @@ const Home: React.FC = () => {
              <a href="#" className="text-brand-primary text-sm font-bold hover:underline">View All New</a>
           </div>
           
-          <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1">
-            {aiRecommendations.newJoiners.map((artist) => (
-              <ArtistCard 
-                key={artist.id} 
-                artist={artist}
-                highlightBadge={<span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">New Joiner</span>} 
-              />
-            ))}
+          <div className="relative">
+            <button 
+                onClick={() => scrollContainer(newJoinersRef, 'left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Left"
+             >
+                <ChevronLeft size={20} strokeWidth={2.5} />
+             </button>
+
+            <div ref={newJoinersRef} className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1 scroll-smooth">
+              {aiRecommendations.newJoiners.map((artist) => (
+                <ArtistCard 
+                  key={artist.id} 
+                  artist={artist}
+                  highlightBadge={<span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">New Joiner</span>} 
+                />
+              ))}
+            </div>
+
+             <button 
+                onClick={() => scrollContainer(newJoinersRef, 'right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
+                aria-label="Scroll Right"
+             >
+                <ChevronRight size={20} strokeWidth={2.5} />
+             </button>
           </div>
         </div>
       </section>
@@ -247,7 +392,7 @@ const Home: React.FC = () => {
            
            <div className="flex flex-col lg:flex-row gap-8">
               <div className="lg:w-1/3 bg-white p-8 rounded-card shadow-card border border-transparent h-fit">
-                <h4 className="font-bold text-xl mb-6 text-brand-textHeading">Quick Filter</h4>
+                <h4 className="font-bold text-xl mb-6 text-brand-textMain">Quick Filter</h4>
                 <div className="space-y-4">
                    <div className="relative">
                      <select 
@@ -289,7 +434,7 @@ const Home: React.FC = () => {
                    <button className="w-full bg-brand-primary text-white py-3 rounded-card font-bold mt-4 shadow-md hover:bg-brand-primaryDark transition hover:-translate-y-0.5">Open Full Directory</button>
                 </div>
                 <div className="mt-8">
-                  <h5 className="text-sm font-bold text-brand-textSub mb-4 uppercase tracking-wide">
+                  <h5 className="text-sm font-bold text-brand-textHeading mb-4 uppercase tracking-wide">
                     {selectedDistrict ? `Artists in ${selectedDistrict}` : 'Top Artists'}
                   </h5>
                   <div className="space-y-4">
@@ -327,7 +472,7 @@ const Home: React.FC = () => {
                       }}
                     >
                       <MapPin size={36} className="text-brand-primary fill-current" />
-                      <span className="bg-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm mt-1">{artist.name}</span>
+                      <span className="bg-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm mt-1 text-brand-textMain">{artist.name}</span>
                     </div>
                  ))}
 
@@ -589,7 +734,7 @@ const Home: React.FC = () => {
                 <div className="w-20 h-20 bg-[#E6EEFF] rounded-full flex items-center justify-center mb-6 text-brand-primary shadow-sm">
                   <step.icon size={36} />
                 </div>
-                <h4 className="text-xl font-bold mb-3 text-brand-textHeading">{step.title}</h4>
+                <h4 className="text-xl font-bold mb-3 text-brand-textMain">{step.title}</h4>
                 <p className="text-brand-textBody leading-relaxed">{step.desc}</p>
               </div>
             ))}
