@@ -7,34 +7,37 @@ import Directory from './components/Directory';
 import { Phone, MapPin, Facebook, Instagram, Youtube, Send } from 'lucide-react';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { PageData } from './types';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<string>('home');
+  const [pageData, setPageData] = useState<PageData | undefined>(undefined);
+
+  const handleNavigate = (page: string, data?: PageData) => {
+    setCurrentPage(page);
+    setPageData(data);
+    window.scrollTo(0, 0);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home />;
+        return <Home onNavigate={handleNavigate} />;
       case 'about':
         return <About />;
       case 'directory':
-        return <Directory />;
+        return <Directory initialFilters={pageData} />;
       // For now, other links will just map to Home or show a placeholder if we were building them fully
       default:
-        return <Home />;
+        return <Home onNavigate={handleNavigate} />;
     }
-  };
-
-  const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    window.scrollTo(0, 0);
   };
 
   return (
     <ToastProvider>
       <NotificationProvider>
         <div className="min-h-screen bg-brand-surface font-sans flex flex-col">
-          <Header onNavigate={handleNavigate} />
+          <Header onNavigate={(page) => handleNavigate(page)} />
           
           <main className="flex-grow">
             {renderPage()}

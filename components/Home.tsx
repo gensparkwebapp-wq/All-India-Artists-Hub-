@@ -8,8 +8,13 @@ import { TOP_ARTISTS, STUDIOS, JOBS, TEACHERS, PRODUCTS, LOCATION_DATA, CATEGORI
 import { 
   Mic, Music, Clapperboard, MonitorPlay, Speaker, 
   Map, Calendar, Users, Heart, Star, MapPin, CheckCircle, Video, PlayCircle,
-  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight
+  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight, List, Map as MapIcon
 } from 'lucide-react';
+import { PageData } from '../types';
+
+interface HomeProps {
+  onNavigate: (page: string, data?: PageData) => void;
+}
 
 const ArtistCard: React.FC<{ artist: any; highlightBadge?: React.ReactNode }> = ({ artist, highlightBadge }) => (
   <div className="min-w-[160px] md:min-w-[220px] flex flex-col items-center p-4 cursor-pointer hover:-translate-y-2 transition-all duration-300 bg-white rounded-card shadow-card hover:shadow-card-hover border border-transparent relative group">
@@ -124,7 +129,7 @@ const MessageIcon = ({ size }: { size: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 )
 
-const Home: React.FC = () => {
+const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   // --- AI Engine State & Logic ---
   const [userInterest, setUserInterest] = useState<string>('Singer'); // Default interest
   const [userLocation, setUserLocation] = useState<string>('Jaipur'); // Default location simulation
@@ -210,7 +215,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="bg-brand-surface font-sans text-brand-textBody">
-      <Hero />
+      <Hero onNavigate={onNavigate} />
 
       {/* --- AI Personalized Banner --- */}
       <div className="bg-gradient-to-r from-blue-900 to-brand-primary text-white py-3 overflow-hidden relative">

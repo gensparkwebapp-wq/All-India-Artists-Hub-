@@ -121,3 +121,12 @@ export interface NotificationSettings {
   trendingArtists: boolean;
   disableAll: boolean;
 }
+
+// --- Navigation Data Type ---
+export interface PageData {
+  nearby?: boolean;
+  state?: string;
+  district?: string;
+  manualLocation?: boolean;
+  // Add other potential filters
+}

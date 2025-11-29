@@ -1,12 +1,20 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Briefcase, Mic, ChevronDown } from 'lucide-react';
-import { HERO_STATS, LOCATION_DATA, CATEGORIES } from '../constants';
 
-const Hero: React.FC = () => {
+import React, { useState, useMemo } from 'react';
+import { Search, Briefcase, Mic, ChevronDown, MapPin, Loader2 } from 'lucide-react';
+import { HERO_STATS, LOCATION_DATA, CATEGORIES } from '../constants';
+import { PageData } from '../types';
+
+interface HeroProps {
+  onNavigate?: (page: string, data?: PageData) => void;
+}
+
+const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   const [isListening, setIsListening] = useState(false);
   const [category, setCategory] = useState("Select Category...");
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [showLocationError, setShowLocationError] = useState(false);
 
   const districts = useMemo(() => {
     return LOCATION_DATA.find(s => s.name === selectedState)?.districts || [];
@@ -54,6 +62,41 @@ const Hero: React.FC = () => {
     }
   };
 
+  const handleFindArtistsNearMe = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    setShowLocationError(false);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Mock success - simulating reverse geocoding response
+        setTimeout(() => {
+          setIsDetectingLocation(false);
+          // For demo, assume location is Jaipur, Rajasthan
+          const mockState = "Rajasthan";
+          const mockDistrict = "Jaipur";
+          
+          if (onNavigate) {
+            onNavigate('directory', {
+              nearby: true,
+              state: mockState,
+              district: mockDistrict
+            });
+          }
+        }, 1500); // 1.5s delay for realism
+      },
+      (error) => {
+        console.error("Location error:", error);
+        setIsDetectingLocation(false);
+        setShowLocationError(true);
+      }
+    );
+  };
+
   return (
     <section className="relative bg-brand-textMain text-white overflow-hidden">
       {/* Background Image with Overlay */}
@@ -79,13 +122,47 @@ const Hero: React.FC = () => {
               Khojo • Connect Karo • Book Karo • Earn Karo – All India Artists, Studios, Live Sound & Events ek hi digital छत के नीचे.
             </p>
             
-            <div className="flex flex-wrap gap-4 pt-4">
-              <button className="bg-white text-brand-primaryDark px-8 py-4 rounded-card font-bold hover:bg-gray-100 transition duration-250 shadow-lg hover:-translate-y-1">
-                Find Artists Near Me
+            <div className="flex flex-wrap gap-4 pt-4 relative">
+              <button 
+                onClick={handleFindArtistsNearMe}
+                disabled={isDetectingLocation}
+                className="bg-white text-brand-primaryDark px-8 py-4 rounded-card font-bold hover:bg-gray-100 transition duration-250 shadow-lg hover:-translate-y-1 flex items-center gap-2"
+              >
+                {isDetectingLocation ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} /> Detecting Location...
+                  </>
+                ) : (
+                  <>
+                    <MapPin size={20} /> Find Artists Near Me
+                  </>
+                )}
               </button>
               <button className="bg-brand-primary text-white px-8 py-4 rounded-card font-bold hover:bg-brand-primaryDark transition duration-250 shadow-lg hover:-translate-y-1">
                 Join as Artist / Studio
               </button>
+
+              {/* Location Error Modal (Inline for simplicity) */}
+              {showLocationError && (
+                <div className="absolute top-full mt-2 left-0 bg-white text-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 w-80 z-20 animate-fade-in">
+                  <h4 className="font-bold text-sm mb-2 text-red-600">Location Access Denied</h4>
+                  <p className="text-xs text-gray-500 mb-3">Please allow location access to find artists nearby.</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleFindArtistsNearMe}
+                      className="bg-brand-surface hover:bg-gray-200 text-brand-textMain px-3 py-1.5 rounded text-xs font-bold"
+                    >
+                      Retry
+                    </button>
+                    <button 
+                      onClick={() => onNavigate && onNavigate('directory', { manualLocation: true })}
+                      className="bg-brand-primary text-white px-3 py-1.5 rounded text-xs font-bold"
+                    >
+                      Enter Manually
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Stats */}
@@ -118,9 +195,9 @@ const Hero: React.FC = () => {
                     <select 
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none appearance-none bg-white text-brand-textMain"
+                      className="w-full pl-10 pr-10 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none appearance-none bg-gray-800 text-white"
                     >
-                      <option>Select Category...</option>
+                      <option className="text-gray-300">Select Category...</option>
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <button 
@@ -141,9 +218,9 @@ const Hero: React.FC = () => {
                       <select 
                         value={selectedState}
                         onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                        className="w-full px-3 py-3 border border-gray-200 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-white text-sm text-brand-textMain appearance-none"
+                        className="w-full px-3 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white text-sm appearance-none"
                       >
-                        <option value="">All India</option>
+                        <option value="" className="text-gray-300">All India</option>
                         {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                       </select>
                       <ChevronDown size={14} className="absolute right-2 top-3.5 text-gray-400 pointer-events-none" />
@@ -156,9 +233,9 @@ const Hero: React.FC = () => {
                         value={selectedDistrict}
                         onChange={(e) => setSelectedDistrict(e.target.value)}
                         disabled={!selectedState}
-                        className="w-full px-3 py-3 border border-gray-200 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-white text-sm text-brand-textMain appearance-none disabled:opacity-50"
+                        className="w-full px-3 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white text-sm appearance-none disabled:opacity-50"
                       >
-                        <option value="">Select...</option>
+                        <option value="" className="text-gray-300">Select...</option>
                         {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                       </select>
                       <ChevronDown size={14} className="absolute right-2 top-3.5 text-gray-400 pointer-events-none" />
@@ -169,8 +246,8 @@ const Hero: React.FC = () => {
                 <div>
                    <label className="block text-xs font-bold text-brand-textSub mb-2 uppercase tracking-wide">Budget Range</label>
                    <div className="flex gap-4">
-                     <input type="number" placeholder="Min Budget" className="w-1/2 px-3 py-3 border border-gray-200 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none text-brand-textMain placeholder-gray-400" />
-                     <input type="number" placeholder="Max Budget" className="w-1/2 px-3 py-3 border border-gray-200 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none text-brand-textMain placeholder-gray-400" />
+                     <input type="number" placeholder="Min Budget" className="w-1/2 px-3 py-3 border border-gray-600 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white placeholder-gray-400 caret-white" />
+                     <input type="number" placeholder="Max Budget" className="w-1/2 px-3 py-3 border border-gray-600 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white placeholder-gray-400 caret-white" />
                    </div>
                 </div>
 
