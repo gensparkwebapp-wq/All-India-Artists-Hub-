@@ -8,7 +8,7 @@ import { TOP_ARTISTS, STUDIOS, JOBS, TEACHERS, PRODUCTS, LOCATION_DATA, CATEGORI
 import { 
   Mic, Music, Clapperboard, MonitorPlay, Speaker, 
   Map, Calendar, Users, Heart, Star, MapPin, CheckCircle, Video, PlayCircle,
-  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight, List, Map as MapIcon
+  User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight, List, Map as MapIcon, Zap
 } from 'lucide-react';
 import { PageData } from '../types';
 
@@ -106,22 +106,34 @@ const CategoryCard = ({ icon: Icon, title, desc, color }: any) => (
 );
 
 const StudioCard: React.FC<{ studio: any }> = ({ studio }) => (
-  <div className="bg-white rounded-card shadow-card hover:shadow-card-hover border border-transparent overflow-hidden group transition-all duration-300 hover:-translate-y-2">
-    <div className="h-48 overflow-hidden relative">
+  <div className="bg-white rounded-card shadow-card hover:shadow-card-hover border border-transparent overflow-hidden group transition-all duration-300 hover:-translate-y-2 min-w-[280px]">
+    <div className="h-40 overflow-hidden relative">
       <img src={studio.imageUrl} alt={studio.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
-      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-brand-textMain text-xs font-bold px-2 py-1 rounded shadow-sm">{studio.type.toUpperCase()}</div>
+      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-brand-textMain text-xs font-bold px-2 py-1 rounded shadow-sm uppercase">{studio.type}</div>
     </div>
-    <div className="p-5">
-      <div className="flex justify-between items-start mb-3">
-        <h4 className="font-bold text-lg text-brand-textMain">{studio.name}</h4>
-        <span className="text-xs bg-brand-surface text-brand-textBody px-2 py-1 rounded-full font-medium border border-gray-100">{studio.city}</span>
+    <div className="p-4">
+      <div className="flex justify-between items-start mb-2">
+        <h4 className="font-bold text-base text-brand-textMain truncate pr-2">{studio.name}</h4>
+        <span className="text-[10px] bg-brand-surface text-brand-textBody px-2 py-0.5 rounded-full font-medium border border-gray-100 whitespace-nowrap">{studio.city}</span>
       </div>
-      <p className="text-sm text-brand-textBody mb-4 line-clamp-1">{studio.services.join(', ')}</p>
-      <div className="flex justify-between items-center border-t border-gray-100 pt-4">
-        <span className="font-bold text-brand-primary text-lg">₹{studio.priceStart}+</span>
-        <button className="text-xs bg-brand-primary text-white px-4 py-2 rounded-full font-semibold hover:bg-brand-primaryDark transition shadow-sm">Book Now</button>
+      <p className="text-xs text-brand-textBody mb-3 line-clamp-1">{studio.services.join(', ')}</p>
+      <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+        <span className="font-bold text-brand-primary text-base">₹{studio.priceStart}+</span>
+        <button className="text-[10px] bg-brand-primary text-white px-3 py-1.5 rounded-full font-semibold hover:bg-brand-primaryDark transition shadow-sm">Book</button>
       </div>
     </div>
+  </div>
+);
+
+const JobCard: React.FC<{ job: any }> = ({ job }) => (
+  <div className="bg-white p-5 rounded-card shadow-card border-l-4 border-brand-primary hover:shadow-card-hover transition duration-300 hover:-translate-y-1 min-w-[260px]">
+    <h4 className="font-bold text-brand-textMain mb-1 text-base">{job.title}</h4>
+    <p className="text-xs text-brand-textBody mb-3 flex items-center"><MapPin size={12} className="mr-1"/> {job.location}</p>
+    <div className="flex justify-between items-center text-[10px] mb-3">
+      <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded">{job.budget}</span>
+      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">{job.type}</span>
+    </div>
+    <button className="w-full text-xs bg-brand-primary text-white py-2 rounded-lg font-semibold hover:bg-brand-primaryDark transition">Apply Now</button>
   </div>
 );
 
@@ -139,6 +151,21 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
   // --- AI Recommendations ---
   const aiRecommendations = useMemo(() => {
+    // 1. Studio Mapping Logic
+    // If user likes Singers/Musicians -> Suggest Recording Studios
+    // If user likes Actors/Models -> Suggest Video/Photo Studios
+    // If user likes Live Sound -> Suggest Sound Vendors
+    const studioTypeMap: Record<string, string> = {
+        'Singer': 'recording',
+        'Musician': 'recording',
+        'Actor': 'video',
+        'Model': 'video',
+        'Dancer': 'video',
+        'Live Sound': 'sound',
+        'Event Manager': 'sound'
+    };
+    const targetStudioType = studioTypeMap[userInterest] || 'recording';
+
     return {
       // 1. Recommended for You (Matches Interest + High Rating)
       forYou: DIRECTORY_ARTISTS
@@ -150,15 +177,25 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       trending: DIRECTORY_ARTISTS
         .filter(a => a.isTrending)
         .sort((a, b) => (b.views || 0) - (a.views || 0))
-        .slice(0, 8), // Increased slice for scrolling demo
+        .slice(0, 8),
 
-      // 3. New Joiners (Simulated by Date - assuming mockup data has it or we pick some)
+      // 3. New Joiners (Simulated by Date)
       newJoiners: DIRECTORY_ARTISTS
         .filter(a => a.joinedDate && new Date(a.joinedDate) > new Date('2023-06-01'))
         .sort((a, b) => (b.joinedDate ? new Date(b.joinedDate).getTime() : 0) - (a.joinedDate ? new Date(a.joinedDate).getTime() : 0))
-        .slice(0, 5)
+        .slice(0, 5),
+      
+      // 4. Recommended Studios (Smart Mapping)
+      studios: STUDIOS
+        .filter(s => s.type === targetStudioType || s.city === userLocation)
+        .slice(0, 5),
+
+      // 5. Recommended Events/Jobs (Location + Interest)
+      jobs: JOBS
+        .filter(j => j.location === userLocation || j.title.toLowerCase().includes(userInterest.toLowerCase()))
+        .slice(0, 4)
     };
-  }, [userInterest]);
+  }, [userInterest, userLocation]);
 
   // --- Quick Filter State for Map Section ---
   const [selectedState, setSelectedState] = useState('');
@@ -186,6 +223,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const trendingRef = useRef<HTMLDivElement>(null);
   const recommendedRef = useRef<HTMLDivElement>(null);
   const newJoinersRef = useRef<HTMLDivElement>(null);
+  const studiosRef = useRef<HTMLDivElement>(null);
   
   const scrollContainer = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
     if (ref.current) {
@@ -202,7 +240,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     const interval = setInterval(() => {
         if (trendingRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = trendingRef.current;
-            // If near end, loop back (or just stop, but request said auto scroll)
             if (scrollLeft + clientWidth >= scrollWidth - 50) {
                 trendingRef.current.scrollTo({ left: 0, behavior: 'smooth' });
             } else {
@@ -223,11 +260,11 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
            <div className="flex items-center gap-2 animate-fade-in text-sm md:text-base font-medium">
              <Sparkles size={18} className="text-yellow-300 animate-pulse" />
              <span>
-               Hello! Based on your interest in <strong>{userInterest}</strong>, we have found {aiRecommendations.forYou.length} top artists for you.
+               Based on your interest in <strong>{userInterest}</strong>, we found {aiRecommendations.forYou.length} artists, {aiRecommendations.studios.length} studios, and {aiRecommendations.jobs.length} jobs for you.
              </span>
            </div>
            <button className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition hidden md:block">
-             Personalize Recommendations
+             Personalize
            </button>
         </div>
       </div>
@@ -244,7 +281,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
           
           <div className="relative">
-             {/* Left Nav Button */}
              <button 
                 onClick={() => scrollContainer(recommendedRef, 'left')}
                 className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
@@ -263,7 +299,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               )}
             </div>
 
-            {/* Right Nav Button */}
              <button 
                 onClick={() => scrollContainer(recommendedRef, 'right')}
                 className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
@@ -275,10 +310,61 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
       </section>
 
+      {/* 3.1 AI - Recommended Studios & Services (NEW) */}
+      {aiRecommendations.studios.length > 0 && (
+        <section className="py-12 bg-brand-surface border-b border-gray-100 relative group/section">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+               <div className="flex items-center gap-2">
+                  <Video className="text-purple-600" size={24} />
+                  <h3 className="font-bold text-xl text-brand-textHeading">Studios & Services You Might Need</h3>
+               </div>
+               <a href="#" className="text-brand-primary text-sm font-bold hover:underline">View All</a>
+            </div>
+            
+            <div className="relative">
+               <button onClick={() => scrollContainer(studiosRef, 'left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 border border-gray-100">
+                  <ChevronLeft size={20} strokeWidth={2.5} />
+               </button>
+
+              <div ref={studiosRef} className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1 scroll-smooth">
+                {aiRecommendations.studios.map((studio) => (
+                  <StudioCard key={studio.id} studio={studio} />
+                ))}
+              </div>
+
+               <button onClick={() => scrollContainer(studiosRef, 'right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 border border-gray-100">
+                  <ChevronRight size={20} strokeWidth={2.5} />
+               </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3.2 AI - Opportunities For You (NEW) */}
+      {aiRecommendations.jobs.length > 0 && (
+        <section className="py-12 bg-white relative">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+               <div className="flex items-center gap-2">
+                  <Briefcase className="text-green-600" size={24} />
+                  <h3 className="font-bold text-xl text-brand-textHeading">Opportunities For You</h3>
+               </div>
+               <a href="#" className="text-brand-primary text-sm font-bold hover:underline">See All Jobs</a>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {aiRecommendations.jobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 4. AI - Trending Now (Redesigned Carousel) */}
       <section className="py-12 bg-brand-surface border-b border-gray-100 relative group/section">
         <div className="container mx-auto px-4">
-          {/* Header */}
           <div className="flex items-center justify-between mb-8">
              <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-100 rounded-full">
@@ -291,33 +377,18 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
              </a>
           </div>
           
-          {/* Carousel Container */}
           <div className="relative">
-             {/* Left Nav Button */}
-             <button 
-                onClick={() => scrollTrending('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
-                aria-label="Scroll Left"
-             >
+             <button onClick={() => scrollTrending('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100">
                 <ChevronLeft size={24} strokeWidth={2.5} />
              </button>
 
-             {/* Scrolling Content */}
-             <div 
-                ref={trendingRef}
-                className="flex overflow-x-auto gap-6 pb-8 pt-2 no-scrollbar snap-x px-1 scroll-smooth"
-             >
+             <div ref={trendingRef} className="flex overflow-x-auto gap-6 pb-8 pt-2 no-scrollbar snap-x px-1 scroll-smooth">
                 {aiRecommendations.trending.map((artist) => (
                   <TrendingArtistCard key={artist.id} artist={artist} />
                 ))}
              </div>
 
-             {/* Right Nav Button */}
-             <button 
-                onClick={() => scrollTrending('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
-                aria-label="Scroll Right"
-             >
+             <button onClick={() => scrollTrending('right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-3 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100">
                 <ChevronRight size={24} strokeWidth={2.5} />
              </button>
           </div>
@@ -328,24 +399,12 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       <section className="py-20 container mx-auto px-4">
         <SectionHeading title="Explore Categories" centered />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <CategoryCard 
-            icon={Mic} title="Singers" desc="Bollywood, Folk, Rapper, Wedding & Devotional Singers" color="bg-red-500"
-          />
-          <CategoryCard 
-            icon={Music} title="Musicians" desc="Guitarist, Keyboard, Drummer, Live Bands" color="bg-blue-500"
-          />
-          <CategoryCard 
-            icon={Clapperboard} title="Actors & Models" desc="Film, TV, Theatre, Child Artist, Junior Artist" color="bg-purple-500"
-          />
-          <CategoryCard 
-            icon={Video} title="Studios" desc="Recording, Dubbing, Video Shoot, Photography" color="bg-indigo-600"
-          />
-          <CategoryCard 
-            icon={Speaker} title="Live Sound" desc="PA Systems, DJ Sound, LED Walls, Stage Setup" color="bg-orange-500"
-          />
-          <CategoryCard 
-            icon={Calendar} title="Event Managers" desc="Wedding Planners, Organizers, Celebrity Booking" color="bg-pink-500"
-          />
+          <CategoryCard icon={Mic} title="Singers" desc="Bollywood, Folk, Rapper, Wedding & Devotional Singers" color="bg-red-500" />
+          <CategoryCard icon={Music} title="Musicians" desc="Guitarist, Keyboard, Drummer, Live Bands" color="bg-blue-500" />
+          <CategoryCard icon={Clapperboard} title="Actors & Models" desc="Film, TV, Theatre, Child Artist, Junior Artist" color="bg-purple-500" />
+          <CategoryCard icon={Video} title="Studios" desc="Recording, Dubbing, Video Shoot, Photography" color="bg-indigo-600" />
+          <CategoryCard icon={Speaker} title="Live Sound" desc="PA Systems, DJ Sound, LED Walls, Stage Setup" color="bg-orange-500" />
+          <CategoryCard icon={Calendar} title="Event Managers" desc="Wedding Planners, Organizers, Celebrity Booking" color="bg-pink-500" />
         </div>
       </section>
 
@@ -361,29 +420,17 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
           </div>
           
           <div className="relative">
-            <button 
-                onClick={() => scrollContainer(newJoinersRef, 'left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
-                aria-label="Scroll Left"
-             >
+            <button onClick={() => scrollContainer(newJoinersRef, 'left')} className="absolute left-0 top-1/2 -translate-y-1/2 -ml-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100">
                 <ChevronLeft size={20} strokeWidth={2.5} />
              </button>
 
             <div ref={newJoinersRef} className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x px-1 scroll-smooth">
               {aiRecommendations.newJoiners.map((artist) => (
-                <ArtistCard 
-                  key={artist.id} 
-                  artist={artist}
-                  highlightBadge={<span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">New Joiner</span>} 
-                />
+                <ArtistCard key={artist.id} artist={artist} highlightBadge={<span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">New Joiner</span>} />
               ))}
             </div>
 
-             <button 
-                onClick={() => scrollContainer(newJoinersRef, 'right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100"
-                aria-label="Scroll Right"
-             >
+             <button onClick={() => scrollContainer(newJoinersRef, 'right')} className="absolute right-0 top-1/2 -translate-y-1/2 -mr-5 z-20 bg-white p-2.5 rounded-full shadow-lg text-gray-700 hover:text-brand-primary hidden lg:flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 hover:scale-110 border border-gray-100">
                 <ChevronRight size={20} strokeWidth={2.5} />
              </button>
           </div>
@@ -394,48 +441,31 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       <section className="bg-brand-surface py-20 border-t border-gray-200">
         <div className="container mx-auto px-4">
            <SectionHeading title="Aapke Sheher ke Artists – Map par dekhiyé" subtext="Find talent in your specific block, district or pincode" />
-           
            <div className="flex flex-col lg:flex-row gap-8">
               <div className="lg:w-1/3 bg-white p-8 rounded-card shadow-card border border-transparent h-fit">
                 <h4 className="font-bold text-xl mb-6 text-brand-textMain">Quick Filter</h4>
                 <div className="space-y-4">
                    <div className="relative">
-                     <select 
-                       value={selectedState} 
-                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                       className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none"
-                     >
+                     <select value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none">
                        <option value="">Select State</option>
                        {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                      </select>
                      <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
                    </div>
-
                    <div className="relative">
-                     <select 
-                       value={selectedDistrict}
-                       onChange={(e) => setSelectedDistrict(e.target.value)}
-                       disabled={!selectedState}
-                       className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none disabled:opacity-50"
-                     >
+                     <select value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)} disabled={!selectedState} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none disabled:opacity-50">
                        <option value="">Select District</option>
                        {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                      </select>
                      <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
                    </div>
-
                    <div className="relative">
-                     <select 
-                       value={selectedCategory}
-                       onChange={(e) => setSelectedCategory(e.target.value)}
-                       className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none"
-                     >
+                     <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none">
                        <option value="">All Categories</option>
                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                      </select>
                      <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
                    </div>
-
                    <button className="w-full bg-brand-primary text-white py-3 rounded-card font-bold mt-4 shadow-md hover:bg-brand-primaryDark transition hover:-translate-y-0.5">Open Full Directory</button>
                 </div>
                 <div className="mt-8">
@@ -460,30 +490,17 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                   </div>
                 </div>
               </div>
-
               <div className="lg:w-2/3 bg-gray-200 rounded-card h-[450px] relative overflow-hidden group shadow-inner">
-                 {/* Mock Map */}
                  <img src="https://picsum.photos/seed/map/800/600" alt="Map Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-700" />
-                 
-                 {/* Dynamic Pins based on Filtered Artists */}
                  {displayArtists.map((artist, idx) => (
-                    <div 
-                      key={artist.id} 
-                      className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-bounce drop-shadow-lg flex flex-col items-center"
-                      style={{ 
-                        top: `${artist.lat}%`, 
-                        left: `${artist.lng}%`,
-                        animationDelay: `${idx * 150}ms`
-                      }}
-                    >
+                    <div key={artist.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 animate-bounce drop-shadow-lg flex flex-col items-center" style={{ top: `${artist.lat}%`, left: `${artist.lng}%`, animationDelay: `${idx * 150}ms` }}>
                       <MapPin size={36} className="text-brand-primary fill-current" />
                       <span className="bg-white text-[10px] px-2 py-0.5 rounded font-bold shadow-sm mt-1 text-brand-textMain">{artist.name}</span>
                     </div>
                  ))}
-
                  <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-transparent transition pointer-events-none">
                     <button className="pointer-events-auto bg-white text-brand-textMain px-8 py-3 rounded-full shadow-2xl font-bold hover:scale-105 transition flex items-center border border-gray-200">
-                      <Map className="mr-2 text-brand-primary" size={20} /> Explore Interactive Map
+                      <MapIcon className="mr-2 text-brand-primary" size={20} /> Explore Interactive Map
                     </button>
                  </div>
               </div>
@@ -491,24 +508,12 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 8. Studios & Sound */}
-      <section className="py-20 container mx-auto px-4">
-        <SectionHeading title="Recording Studio, Video Shoot & Live Sound" subtext="One Click Booking for your next project" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           {STUDIOS.map(studio => <StudioCard key={studio.id} studio={studio} />)}
-        </div>
-        <div className="text-center mt-12">
-          <button className="border-2 border-brand-textMain text-brand-textMain px-8 py-3 rounded-full font-bold hover:bg-brand-textMain hover:text-white transition duration-300">
-            View All Studios & Live Sound Vendors
-          </button>
-        </div>
-      </section>
-
+      {/* 8. Studios & Sound (Static fallback removed/kept as secondary) */}
+      
       {/* 9. Social Feed */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <SectionHeading title="Artists ki Latest Activity" centered subtext="Reels, Shorts, Updates direct from the community" />
-          
           <div className="flex flex-col md:flex-row gap-8 justify-center">
              {[1, 2].map(item => (
                <div key={item} className="w-full md:w-[400px] bg-white border border-transparent rounded-card shadow-card hover:shadow-card-hover transition duration-300 hover:-translate-y-2">
@@ -534,7 +539,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 10. Job Portal */}
+      {/* 10. Job Portal (Included in AI Recommendations now, kept here as static full list) */}
       <section className="py-20 bg-brand-surface border-y border-gray-100">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
@@ -552,15 +557,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
             <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                {JOBS.map(job => (
-                 <div key={job.id} className="bg-white p-6 rounded-card shadow-card border-l-4 border-brand-primary hover:shadow-card-hover transition duration-300 hover:-translate-y-2">
-                    <h4 className="font-bold text-brand-textMain mb-2 text-lg">{job.title}</h4>
-                    <p className="text-sm text-brand-textBody mb-4 flex items-center"><MapPin size={14} className="mr-1"/> {job.location}</p>
-                    <div className="flex justify-between items-center text-xs mb-4">
-                      <span className="font-bold text-green-600 bg-green-50 px-2 py-1 rounded">{job.budget}</span>
-                      <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">{job.type}</span>
-                    </div>
-                    <button className="w-full text-sm bg-brand-primary text-white py-2.5 rounded-lg font-semibold hover:bg-brand-primaryDark transition">Apply Now</button>
-                 </div>
+                 <JobCard key={job.id} job={job} />
                ))}
             </div>
           </div>

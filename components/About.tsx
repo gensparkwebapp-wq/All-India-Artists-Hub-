@@ -1,306 +1,395 @@
-import React, { useState, useEffect, useRef } from 'react';
-import SectionHeading from './SectionHeading';
-import { Heart, Users, Shield, Award, Target, CheckCircle, Smartphone, Facebook, CreditCard, AlertTriangle, XCircle, ArrowRight } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Globe, Heart, Users, Target, Shield, CheckCircle, ChevronRight, User, Star, ArrowRight } from 'lucide-react';
 
 const About: React.FC = () => {
-  const [missionVisible, setMissionVisible] = useState(false);
-  const missionRef = useRef<HTMLDivElement>(null);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
 
+  // SEO Title
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setMissionVisible(true);
-          observer.disconnect(); // Trigger animation only once
-        }
-      },
-      { threshold: 0.2 } // Trigger when 20% of the element is visible
-    );
-
-    if (missionRef.current) {
-      observer.observe(missionRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
+    document.title = "About ArtistsHub India | Uniting Talent";
   }, []);
 
+  const toggleLang = () => setLang(prev => prev === 'en' ? 'hi' : 'en');
+
+  // Content Dictionary
+  const content = {
+    en: {
+      hero: {
+        title: "Our Journey: Uniting Indian Artists",
+        sub: "Connecting singers, actors, dancers & more across India. A movement to give every artist a stage.",
+        join: "Join the Movement",
+        explore: "Explore Directory",
+        founder: "Founded by Vijay Kumar",
+        role: "Passionate Artist & NGO Leader"
+      },
+      story: {
+        title: "Why Us?",
+        text: "Launched in 2025, ArtistsHub India is a revolutionary platform empowering over 50,000+ artists across 10+ states. In a country rich with talent but poor in organized opportunities, we bridge the gap between rural potential and global stages.",
+        quote: "Talent needs a platform, and we are that stage."
+      },
+      mission: {
+        title: "What We Do",
+        cards: [
+          { title: "Mission", desc: "To empower every artist with a verified digital identity and direct work opportunities." },
+          { title: "Vision", desc: "Global recognition for Indian regional talent, eliminating middlemen." },
+          { title: "Values", desc: "Transparency, Respect (Samman), and Community (Sangathan)." }
+        ]
+      },
+      ngo: {
+        title: "Our NGO Root",
+        sub: "Powered by 'Meri Pahal Fast Help Artist Welfare Association'",
+        text: "We are more than a website. We are a Trust dedicated to the welfare of artists. From providing medical aid to ensuring women's safety in the industry, our NGO stands as a pillar of support.",
+        stats: ["Women Empowerment", "Medical Aid", "Lifetime Membership ₹100"]
+      },
+      team: {
+        title: "Our Team",
+        stats: "50K Artists | 10 States | 500+ Events"
+      },
+      join: {
+        title: "Join Us",
+        sub: "Be part of the revolution. Register today.",
+        name: "Full Name",
+        email: "Email Address",
+        submit: "Submit Application"
+      },
+      footer: "© 2025 ArtistsHub India. All Rights Reserved."
+    },
+    hi: {
+      hero: {
+        title: "हमारी यात्रा: भारतीय कलाकारों को एकजुट करना",
+        sub: "भारत भर के गायकों, अभिनेताओं, नर्तकों और अन्य कलाकारों को जोड़ना। हर कलाकार को एक मंच देने का आंदोलन।",
+        join: "आंदोलन में शामिल हों",
+        explore: "डायरेक्टरी देखें",
+        founder: "संस्थापक: विजय कुमार",
+        role: "भावुक कलाकार और एनजीओ नेता"
+      },
+      story: {
+        title: "हम क्यों?",
+        text: "2025 में शुरू किया गया, आर्टिस्टहब इंडिया 10+ राज्यों में 50,000+ कलाकारों को सशक्त बनाने वाला एक क्रांतिकारी मंच है। ऐसे देश में जहां प्रतिभा की कमी नहीं है लेकिन अवसरों की कमी है, हम ग्रामीण क्षमता और वैश्विक मंचों के बीच की खाई को पाटते हैं।",
+        quote: "प्रतिभा को एक मंच की आवश्यकता होती है, और हम वह मंच हैं।"
+      },
+      mission: {
+        title: "हम क्या करते हैं",
+        cards: [
+          { title: "मिशन", desc: "हर कलाकार को सत्यापित डिजिटल पहचान और सीधे काम के अवसर प्रदान करना।" },
+          { title: "दृष्टि", desc: "भारतीय क्षेत्रीय प्रतिभा के लिए वैश्विक पहचान, बिचौलियों को खत्म करना।" },
+          { title: "मूल्य", desc: "पारदर्शिता, सम्मान (Samman), और समुदाय (Sangathan)।" }
+        ]
+      },
+      ngo: {
+        title: "हमारा एनजीओ",
+        sub: "'मेरी पहल फास्ट हेल्प आर्टिस्ट वेलफेयर एसोसिएशन' द्वारा संचालित",
+        text: "हम सिर्फ एक वेबसाइट नहीं हैं। हम कलाकारों के कल्याण के लिए समर्पित एक ट्रस्ट हैं। चिकित्सा सहायता प्रदान करने से लेकर उद्योग में महिलाओं की सुरक्षा सुनिश्चित करने तक, हमारा एनजीओ समर्थन के स्तंभ के रूप में खड़ा है।",
+        stats: ["महिला सशक्तिकरण", "चिकित्सा सहायता", "आजीवन सदस्यता ₹100"]
+      },
+      team: {
+        title: "हमारी टीम",
+        stats: "50,000 कलाकार | 10 राज्य | 500+ कार्यक्रम"
+      },
+      join: {
+        title: "हमसे जुड़ें",
+        sub: "क्रांति का हिस्सा बनें। आज ही पंजीकरण करें।",
+        name: "पूरा नाम",
+        email: "ईमेल पता",
+        submit: "आवेदन जमा करें"
+      },
+      footer: "© 2025 आर्टिस्टहब इंडिया। सर्वाधिकार सुरक्षित।"
+    }
+  };
+
+  const t = content[lang];
+
   return (
-    <div className="bg-brand-surface min-h-screen font-sans text-brand-textBody">
-      {/* SECTION 1 — HERO HEADER */}
-      <div className="relative bg-brand-textMain text-white py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src="https://picsum.photos/seed/indianculture/1920/1080" 
-            alt="Indian Culture" 
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-textMain/95 via-brand-textMain/90 to-brand-textMain"></div>
-        </div>
-        <div className="container mx-auto px-4 relative z-10 text-center animate-fade-in-up">
-          {/* Subtitle */}
-          <p className="text-brand-primary font-bold uppercase tracking-wider text-xs md:text-sm mb-5">
-            Sangeet Kalakar Union & Meri Pahal Fast Help Artist Welfare Association (Trust)
-          </p>
-          
-          {/* Title */}
-          <h1 className="text-3xl md:text-5xl lg:text-7xl font-extrabold mb-8 leading-tight tracking-tight">
-            भारत के कलाकारों की आवाज़ – <br className="hidden md:block" />
-            <span className="text-white">एकता, पहचान और सम्मान</span>
-          </h1>
+    <div className="font-poppins bg-gray-50 min-h-screen text-gray-800 overflow-x-hidden">
+      {/* Font Import */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+      `}</style>
 
-          {/* Tagline */}
-          <p className="text-lg md:text-2xl text-gray-300 font-light italic mb-12 max-w-4xl mx-auto">
-            "कलाकार सिर्फ़ मनोरंजन नहीं, एक राष्ट्र की सांस्कृतिक पहचान हैं।"
-          </p>
-
-          {/* Buttons Row */}
-          <div className="flex flex-col md:flex-row gap-5 justify-center items-center mb-16">
-            <button className="bg-white text-brand-textMain px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-gray-100 transition flex items-center w-full md:w-auto justify-center group hover:-translate-y-1">
-              <Smartphone className="mr-2 group-hover:scale-110 transition text-brand-primary" size={20} /> Join Kutumb App (45k+)
-            </button>
-            <button className="bg-[#1877F2] text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-blue-700 transition flex items-center w-full md:w-auto justify-center group hover:-translate-y-1">
-              <Facebook className="mr-2 group-hover:scale-110 transition" size={20} /> Join Facebook Group
-            </button>
-             <button className="bg-brand-primary text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-brand-primaryDark transition flex items-center w-full md:w-auto justify-center group hover:-translate-y-1">
-              <CreditCard className="mr-2 group-hover:scale-110 transition" size={20} /> Register as Artist (ID Card)
-            </button>
-          </div>
-
-          {/* Counter Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/10 pt-10 max-w-6xl mx-auto">
-            <div className="p-4">
-              <div className="text-4xl md:text-5xl font-extrabold text-brand-primary mb-2">45k+</div>
-              <div className="text-sm md:text-base text-gray-300 font-medium tracking-wide">कलाकार जुड़े</div>
-            </div>
-            <div className="p-4">
-              <div className="text-4xl md:text-5xl font-extrabold text-brand-primary mb-2">18+</div>
-              <div className="text-sm md:text-base text-gray-300 font-medium tracking-wide">राज्यों में कार्यरत</div>
-            </div>
-            <div className="p-4">
-              <div className="text-4xl md:text-5xl font-extrabold text-brand-primary mb-2">400+</div>
-              <div className="text-sm md:text-base text-gray-300 font-medium tracking-wide">जनप्रतिनिधि</div>
-            </div>
-             <div className="p-4">
-              <div className="text-4xl md:text-5xl font-extrabold text-brand-primary mb-2">2019</div>
-              <div className="text-sm md:text-base text-gray-300 font-medium tracking-wide">से सक्रिय संगठन</div>
-            </div>
-          </div>
-        </div>
+      {/* Language Toggle */}
+      <div className="fixed top-24 right-4 z-50">
+        <button 
+          onClick={toggleLang}
+          className="bg-white/90 backdrop-blur shadow-lg border border-[#FF6B35]/30 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white transition transform hover:scale-105"
+        >
+          <Globe size={16} /> {lang === 'en' ? 'हिंदी' : 'English'}
+        </button>
       </div>
 
-      {/* Core Values */}
-      <section className="py-16 container mx-auto px-4 -mt-16 relative z-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-orange-500 text-center transform hover:-translate-y-2 transition duration-300">
-            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-orange">
-              <Users size={32} />
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Sangathan (Unity)</h3>
-            <p className="text-brand-textBody text-base leading-relaxed">Uniting artists from every village, district, and state of India under one digital roof.</p>
-          </div>
-          <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-green-600 text-center transform hover:-translate-y-2 transition duration-300">
-            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-green">
-              <Shield size={32} />
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Suraksha (Security)</h3>
-            <p className="text-brand-textBody text-base leading-relaxed">Providing social security, insurance, medical aid, and pension support to registered artists.</p>
-          </div>
-          <div className="bg-white p-8 rounded-card shadow-card hover:shadow-card-hover border-t-4 border-[#0F62FE] text-center transform hover:-translate-y-2 transition duration-300">
-             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-brand-primary">
-              <Award size={32} />
-            </div>
-            <h3 className="text-xl font-bold mb-3 text-brand-textMain">Samman (Respect)</h3>
-            <p className="text-brand-textBody text-base leading-relaxed">Ensuring fair pay, direct bookings without middlemen, and national recognition for talent.</p>
-          </div>
+      {/* 1. Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center text-center px-4 pt-16">
+        {/* Artistic Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1532452119098-a3650b3c46d3?q=80&w=1920&auto=format&fit=crop" 
+            alt="Indian Artist" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#007BFF]/90 via-[#004a99]/80 to-[#FF6B35]/70 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
+
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className="mb-6"
+          >
+            <span className="bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-medium tracking-wider uppercase border border-white/30">
+              Est. 2025 • Pan India
+            </span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-4xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg"
+          >
+            {t.hero.title}
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-lg md:text-2xl text-gray-100 mb-10 max-w-3xl font-light leading-relaxed"
+          >
+            {t.hero.sub}
+          </motion.p>
+
+          <div className="flex flex-col sm:flex-row gap-5 mb-16">
+            <button className="bg-[#FF6B35] text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-[#e55a2b] transition transform hover:scale-105 flex items-center justify-center gap-2">
+              {t.hero.join} <ArrowRight size={20} />
+            </button>
+            <button className="bg-white text-[#007BFF] px-10 py-4 rounded-full font-bold shadow-xl hover:bg-gray-100 transition transform hover:scale-105">
+              {t.hero.explore}
+            </button>
+          </div>
+
+          {/* Founder Profile */}
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-3 pr-6 rounded-full border border-white/20 hover:bg-white/20 transition cursor-default"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200&h=200" 
+              alt="Founder" 
+              className="w-14 h-14 rounded-full border-2 border-white object-cover"
+            />
+            <div className="text-left">
+              <h4 className="text-white font-bold text-sm">{t.hero.founder}</h4>
+              <p className="text-gray-300 text-xs">{t.hero.role}</p>
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Scroll Indicator */}
+        <motion.div 
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50"
+        >
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2">
+            <div className="w-1 h-2 bg-white rounded-full" />
+          </div>
+        </motion.div>
       </section>
 
-      {/* SECTION 2 — Who We Are / हम कौन हैं */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center gap-16">
-          <div className="lg:w-1/2">
-             <img src="https://picsum.photos/seed/teamwork123/800/600" alt="NGO Team Work" className="rounded-card shadow-2xl hover:scale-[1.02] transition duration-500" />
-          </div>
-          <div className="lg:w-1/2 space-y-8">
-             <span className="text-brand-primary font-bold tracking-widest uppercase text-xs bg-brand-surface px-3 py-1 rounded-full border border-gray-100">About The Movement</span>
-             
-             {/* Bilingual Heading Correction */}
-             <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textMain leading-tight">
-               Who We Are / <br className="md:hidden"/> <span className="text-brand-primary">हम कौन हैं</span>
-             </h2>
-             
-             <div className="space-y-4">
-                <p className="text-brand-textBody text-lg leading-relaxed font-medium">
-                  <strong className="text-brand-textMain">Meri Pahal Fast Help Artist Welfare Association (Trust)</strong> और <strong className="text-brand-textMain">Sangeet Kalakar Union</strong> भारत के कलाकारों के लिए बनाया गया एक राष्ट्रीय प्लेटफ़ॉर्म और सामाजिक आंदोलन है।
-                </p>
-                <p className="text-brand-textBody text-base italic opacity-90">
-                  (Meri Pahal Fast Help Artist Welfare Association & Sangeet Kalakar Union is a national platform and social movement designed for the artists of India.)
-                </p>
-             </div>
-
-             <div 
-               ref={missionRef}
-               className="rounded-card border border-[#0F62FE] bg-gradient-to-r from-[#f0f7ff] to-[#f7faff] mt-8"
-               style={{
-                 boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
-                 padding: '28px 32px'
-               }}
-             >
-               <h4 className="font-bold text-brand-textMain mb-6 text-lg">हमारा उद्देश्य है (Our Mission):</h4>
-               <ul className="space-y-5">
-                 <li 
-                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
-                    style={{ transitionDelay: '200ms' }}
-                 >
-                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
-                   <div>
-                     <span className="text-brand-textMain text-base font-bold">कलाकारों को पहचान देना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Giving Identity)</span>
-                   </div>
-                 </li>
-                 <li 
-                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
-                    style={{ transitionDelay: '400ms' }}
-                 >
-                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
-                   <div>
-                     <span className="text-brand-textMain text-base font-bold">कानूनी और सामाजिक सुरक्षा उपलब्ध कराना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Legal & Social Security)</span>
-                   </div>
-                 </li>
-                 <li 
-                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
-                    style={{ transitionDelay: '600ms' }}
-                 >
-                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-green" size={22}/> 
-                   <div>
-                     <span className="text-brand-textMain text-base font-bold">रोजगार और अवसरों से जोड़ना</span>
-                     <span className="text-brand-textBody text-sm ml-2 font-normal block md:inline">(Connecting with Jobs)</span>
-                   </div>
-                 </li>
-                 <li 
-                    className={`flex items-start gap-4 transition-all duration-1000 ease-out transform ${missionVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`} 
-                    style={{ transitionDelay: '800ms' }}
-                 >
-                   <CheckCircle className="mt-0.5 flex-shrink-0 text-brand-orange" size={22}/> 
-                   <div>
-                     <span className="text-brand-textMain text-base font-bold text-brand-primary">और सबसे अहम — कलाकारों को सम्मान और अधिकार दिलाना।</span>
-                   </div>
-                 </li>
-               </ul>
-             </div>
-
-             <div className="bg-blue-50 border-l-[6px] border-[#0F62FE] pl-6 py-5 rounded-r-lg">
-                <p className="text-brand-textHeading leading-relaxed font-medium">
-                  यह मंच संगीतकारों, गायकों, नर्तकों, यूट्यूब कलाकारों, बॉलीवुड कलाकारों, जूनियर आर्टिस्ट्स, स्टूडियो, लाइव साउंड टीम, DJs, इवेंट मैनेजर्स और सभी कला क्षेत्रों के लिए खुला है।
-                </p>
-             </div>
-
-             <button className="bg-brand-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-brand-primaryDark transition mt-4 hover:-translate-y-1">
-               Download Trust Brochure
-             </button>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 3 — Why This Union Exists / बदलाव की ज़रूरत क्यों? */}
-      <section className="py-24 bg-brand-surface">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-4xl mx-auto mb-16">
-            <div className="inline-flex items-center justify-center p-3 bg-brand-warningBg rounded-full mb-6 text-brand-warning border border-red-100">
-               <AlertTriangle size={32} />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-brand-textMain mb-6">
-              Why This Union Exists / <span className="text-brand-warning">बदलाव की ज़रूरत क्यों?</span>
-            </h2>
-            <p className="text-lg text-brand-textHeading max-w-2xl mx-auto font-medium">
-              भारत में लाखों कलाकारों को ये चुनौतियाँ झेलनी पड़ती हैं: 
+      {/* 2. Story Section */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="md:w-1/2 space-y-8"
+          >
+            <div className="inline-block bg-blue-50 text-[#007BFF] px-4 py-1 rounded-full font-bold text-sm tracking-wide">OUR ORIGIN</div>
+            <h2 className="text-4xl md:text-5xl font-bold text-[#111827]">{t.story.title}</h2>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-[#007BFF] to-[#FF6B35] rounded-full"></div>
+            <p className="text-lg text-gray-600 leading-relaxed font-medium">
+              {t.story.text}
             </p>
-            <p className="text-brand-textBody text-sm mt-1">(Millions of artists in India face these challenges)</p>
-          </div>
+            <blockquote className="border-l-4 border-[#FF6B35] pl-6 italic text-gray-800 font-serif text-xl bg-orange-50/50 py-6 pr-6 rounded-r-xl shadow-sm">
+              "{t.story.quote}"
+            </blockquote>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="md:w-1/2 flex justify-center relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-orange-200 rounded-full blur-3xl opacity-30 animate-pulse" />
+            <img 
+              src="https://via.placeholder.com/400?text=Union+Logo" 
+              alt="Union Logo" 
+              className="w-80 h-80 object-contain drop-shadow-2xl relative z-10 transform hover:scale-105 transition duration-500"
+            />
+          </motion.div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-            {[
-              { title: "उचित भुगतान नहीं मिलता", sub: "(Unfair pay structures)" },
-              { title: "एजेंट और मिडल-मैन द्वारा शोषण", sub: "(Exploitation by middlemen)" },
-              { title: "मेडिकल / आर्थिक सहायता का अभाव", sub: "(Lack of medical/financial aid)" },
-              { title: "Skill development की कमी", sub: "(Lack of verified identity & skills)" },
-              { title: "कोई राष्ट्रीय Artist Protection Law नहीं", sub: "(No national Artist Protection Law)", full: true }
-            ].map((item, idx) => (
-              <div key={idx} className={`bg-white p-8 rounded-card shadow-card border border-transparent flex items-start gap-5 hover:shadow-card-hover transition hover:-translate-y-1 ${item.full ? 'md:col-span-2 lg:col-span-2 justify-center' : ''}`}>
-                <div className="bg-brand-warningBg p-3 rounded-full flex-shrink-0">
-                  <XCircle className="text-brand-warning" size={24} />
+      {/* 3. Mission Grid */}
+      <section className="py-24 bg-gray-50 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-orange-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 translate-x-1/2 translate-y-1/2"></div>
+
+        <div className="max-w-6xl mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl font-bold mb-16 text-[#111827]">{t.mission.title}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {t.mission.cards.map((card, idx) => (
+              <motion.div 
+                key={idx}
+                whileHover={{ y: -10 }} 
+                className="p-8 rounded-2xl bg-white border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300 text-center group"
+              >
+                <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center shadow-inner transition-colors duration-300 ${
+                  idx === 0 ? 'bg-blue-50 text-[#007BFF] group-hover:bg-[#007BFF] group-hover:text-white' : 
+                  idx === 1 ? 'bg-orange-50 text-[#FF6B35] group-hover:bg-[#FF6B35] group-hover:text-white' : 
+                  'bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white'
+                }`}>
+                  {idx === 0 ? <Target size={36} /> : idx === 1 ? <Globe size={36} /> : <Heart size={36} />}
                 </div>
-                <div>
-                  <h4 className="font-bold text-brand-textMain text-lg mb-2">{item.title}</h4>
-                  <p className="text-brand-textBody text-sm font-normal">{item.sub}</p>
-                </div>
-              </div>
+                <h3 className="text-xl font-bold mb-4 text-gray-800">{card.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{card.desc}</p>
+              </motion.div>
             ))}
           </div>
-
-          <div className="text-center mt-16">
-            <p className="text-xl md:text-2xl font-bold text-brand-primary flex items-center justify-center gap-3">
-              हम इस स्थिति को बदलने के लिए काम कर रहे हैं <ArrowRight size={24} />
-            </p>
-          </div>
         </div>
       </section>
 
-      {/* Objectives Grid */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-           <SectionHeading title="Our Key Objectives" centered subtext="What we strive for every single day" />
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-10">
-              {[
-                { title: "Digital Identity", desc: "Every artist gets a verified profile to showcase work globally." },
-                { title: "Direct Income", desc: "Eliminating commission agents so artists earn what they deserve." },
-                { title: "Crisis Support", desc: "Emergency funds for medical or financial crisis situations." },
-                { title: "Skill Development", desc: "Workshops and training to upgrade artistic skills." }
-              ].map((obj, i) => (
-                <div key={i} className="bg-brand-surface p-8 rounded-card shadow-card hover:shadow-card-hover transition hover:-translate-y-1 border border-transparent">
-                   <div className="w-14 h-14 bg-[#E6EEFF] rounded-full flex items-center justify-center text-brand-primary font-bold mb-6 text-xl shadow-sm">{i+1}</div>
-                   <h4 className="font-bold text-xl mb-3 text-brand-textMain">{obj.title}</h4>
-                   <p className="text-brand-textBody text-base leading-relaxed">{obj.desc}</p>
+      {/* 4. NGO Section */}
+      <section className="py-24 bg-[#007BFF] text-white relative">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16">
+          <div className="md:w-1/2 space-y-8">
+            <div className="inline-block bg-[#FF6B35] text-white px-4 py-1 rounded-full font-bold text-sm shadow-lg">
+              SOCIAL IMPACT
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+              {t.ngo.title}
+            </h2>
+            <p className="text-xl font-medium text-blue-100 italic border-l-4 border-white pl-4">
+              {t.ngo.sub}
+            </p>
+            <p className="text-lg leading-relaxed opacity-90">
+              {t.ngo.text}
+            </p>
+            
+            <div className="flex flex-wrap gap-4 mt-4">
+              {t.ngo.stats.map((stat, i) => (
+                <div key={i} className="bg-white/10 px-4 py-2 rounded-lg backdrop-blur border border-white/20 flex items-center gap-2 font-semibold hover:bg-white/20 transition">
+                  <CheckCircle size={18} className="text-[#FF6B35]" /> {stat}
                 </div>
               ))}
-           </div>
-        </div>
-      </section>
-
-      {/* Gallery */}
-      <section className="py-20 bg-brand-surface">
-        <div className="container mx-auto px-4">
-          <SectionHeading title="Glimpses of Impact" centered subtext="Our events, distributions, and cultural programs" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10">
-             {[1,2,3,4].map(i => (
-                <div key={i} className="overflow-hidden rounded-card shadow-card hover:shadow-card-hover transition cursor-pointer group">
-                  <img src={`https://picsum.photos/seed/event${i}/400/300`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
-                </div>
-             ))}
+            </div>
+          </div>
+          <div className="md:w-1/2 relative">
+            <div className="absolute inset-0 bg-[#FF6B35] rounded-2xl transform rotate-6 opacity-20"></div>
+            <img 
+              src="https://via.placeholder.com/500x600?text=NGO+Activities" 
+              alt="NGO Poster" 
+              className="rounded-2xl shadow-2xl border-4 border-white/20 relative z-10 transform hover:scale-[1.02] transition duration-500 w-full"
+            />
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 bg-brand-primary text-white text-center">
-         <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-8 text-white">Be Part of the Movement</h2>
-            <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto leading-relaxed text-blue-100">
-              Join thousands of artists who are building a secure future with us. Registration is simple and free.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button className="bg-white text-brand-primary px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:bg-gray-100 transition hover:-translate-y-1">
-                Join as an Artist
-              </button>
-              <button className="bg-transparent border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg shadow-none hover:bg-white/10 transition hover:-translate-y-1">
-                Support / Donate
-              </button>
+      {/* 5. Team & Stats */}
+      <section className="py-24 max-w-5xl mx-auto px-4 text-center">
+        <h2 className="text-4xl font-bold mb-16 text-[#111827]">{t.team.title}</h2>
+        
+        <div className="flex flex-wrap justify-center gap-12 mb-20">
+          {[
+            { name: "Vijay Kumar", role: "Founder & Visionary", img: "https://via.placeholder.com/150?text=Vijay" },
+            { name: "Anjali Singh", role: "Welfare Head", img: "https://via.placeholder.com/150?text=Anjali" },
+            { name: "Rahul Verma", role: "Tech Lead", img: "https://via.placeholder.com/150?text=Rahul" },
+            { name: "Priya Das", role: "Community Manager", img: "https://via.placeholder.com/150?text=Priya" },
+          ].map((member, i) => (
+            <div key={i} className="flex flex-col items-center group">
+              <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden mb-5 border-4 border-white shadow-lg group-hover:border-[#007BFF] transition-all duration-300 relative">
+                <img src={member.img} alt={member.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div>
+              </div>
+              <span className="font-bold text-gray-900 text-lg">{member.name}</span>
+              <span className="text-sm text-[#007BFF] font-medium mt-1 bg-blue-50 px-3 py-0.5 rounded-full">{member.role}</span>
             </div>
-         </div>
+          ))}
+        </div>
+
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          className="bg-[#111827] text-white py-12 px-10 rounded-3xl shadow-2xl inline-block border-2 border-gray-800 relative overflow-hidden"
+        >
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-[#FF6B35] rounded-full blur-3xl opacity-20"></div>
+          <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-[#007BFF] rounded-full blur-3xl opacity-20"></div>
+          
+          <div className="relative z-10">
+            <div className="text-3xl md:text-5xl font-extrabold text-[#FF6B35] tracking-widest mb-3 font-mono">
+              {t.team.stats}
+            </div>
+            <p className="text-gray-400 text-sm uppercase tracking-[0.3em] font-medium">Impact & Growth</p>
+          </div>
+        </motion.div>
       </section>
+
+      {/* 6. Join Form - STRICT DARK INPUTS */}
+      <section className="py-24 bg-gray-100">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white p-10 md:p-12 rounded-3xl shadow-xl border border-gray-200 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#007BFF] to-[#FF6B35]"></div>
+            
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-[#111827] mb-3">{t.join.title}</h2>
+              <p className="text-gray-500">{t.join.sub}</p>
+            </div>
+
+            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide ml-1">{t.join.name}</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-4 text-gray-400" size={20} />
+                  <input 
+                    type="text" 
+                    className="w-full pl-12 pr-5 py-4 rounded-xl border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-4 focus:ring-[#007BFF]/20 focus:border-[#007BFF] outline-none transition caret-white text-lg shadow-inner" 
+                    placeholder="Enter your full name..." 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide ml-1">{t.join.email}</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-4 text-gray-400">@</div>
+                  <input 
+                    type="email" 
+                    className="w-full pl-12 pr-5 py-4 rounded-xl border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-4 focus:ring-[#007BFF]/20 focus:border-[#007BFF] outline-none transition caret-white text-lg shadow-inner" 
+                    placeholder="Enter your email address..." 
+                  />
+                </div>
+              </div>
+              <button className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8C00] text-white font-bold py-4 rounded-xl hover:shadow-lg hover:-translate-y-1 transition duration-300 text-lg mt-4 flex justify-center items-center gap-2 group">
+                {t.join.submit} <ChevronRight size={20} className="group-hover:translate-x-1 transition" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white py-8 border-t border-gray-200 text-center">
+        <p className="text-sm text-gray-500 font-medium">{t.footer}</p>
+      </footer>
     </div>
   );
 };
