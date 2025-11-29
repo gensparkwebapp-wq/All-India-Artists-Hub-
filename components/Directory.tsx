@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle, List, Loader2 } from 'lucide-react';
 import { BadgeType, PageData, DirectoryArtist } from '../types';
@@ -238,6 +231,10 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
 
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  // Control variables for mutually exclusive filters
+  const isDistanceSearchActive = selectedRadius !== null;
+  const isLocationSearchActive = !!selectedState;
+
   useEffect(() => {
     if (initialFilters) {
       if (initialFilters.state) setSelectedState(initialFilters.state);
@@ -305,28 +302,40 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   }, [selectedCategory]);
 
   const filteredArtists = useMemo(() => {
-    let artists = DIRECTORY_ARTISTS.filter(artist => {
-      if (searchTerm && !artist.name.toLowerCase().includes(searchTerm.toLowerCase()) && !artist.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
-      if (selectedState && artist.state !== selectedState) return false;
-      if (selectedDistrict && artist.district !== selectedDistrict) return false;
-      if (selectedCategory && artist.category !== selectedCategory) return false;
-      if (selectedSubCategory && artist.subcategory !== selectedSubCategory) return false;
-      return true;
-    }).map(artist => {
-        if (userCoords && artist.geoLat && artist.geoLng) {
-            const dist = calculateDistance(userCoords.lat, userCoords.lng, artist.geoLat, artist.geoLng);
-            return { ...artist, distance: dist };
-        }
-        return { ...artist, distance: undefined };
+    const artistsWithDistance = DIRECTORY_ARTISTS.map(artist => {
+      if (userCoords && artist.geoLat && artist.geoLng) {
+        const dist = calculateDistance(userCoords.lat, userCoords.lng, artist.geoLat, artist.geoLng);
+        return { ...artist, distance: dist };
+      }
+      return { ...artist, distance: undefined };
     });
 
-    if (selectedRadius !== null && userCoords) {
-        artists = artists.filter(a => a.distance !== undefined && a.distance <= selectedRadius);
-        artists.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    const isDistanceSearch = selectedRadius !== null && userCoords;
+
+    const results = artistsWithDistance.filter(artist => {
+      // Apply non-location filters first
+      if (searchTerm && !artist.name.toLowerCase().includes(searchTerm.toLowerCase()) && !artist.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
+      if (selectedCategory && artist.category !== selectedCategory) return false;
+      if (selectedSubCategory && artist.subcategory !== selectedSubCategory) return false;
+
+      // Apply mutually exclusive location filters
+      if (isDistanceSearch) {
+        return artist.distance !== undefined && artist.distance <= selectedRadius;
+      } else {
+        if (selectedState && artist.state !== selectedState) return false;
+        if (selectedDistrict && artist.district !== selectedDistrict) return false;
+      }
+      
+      return true;
+    });
+
+    if (isDistanceSearch) {
+      results.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     }
 
-    return artists;
+    return results;
   }, [searchTerm, selectedState, selectedDistrict, selectedCategory, selectedSubCategory, selectedRadius, userCoords]);
+
 
   const handleRadiusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -406,7 +415,8 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedState} 
                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50 disabled:bg-gray-100"
+                      disabled={isDistanceSearchActive}
                    >
                      <option value="">All States</option>
                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
@@ -414,12 +424,13 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedDistrict} 
                       onChange={(e) => setSelectedDistrict(e.target.value)}
-                      disabled={!selectedState}
+                      disabled={!selectedState || isDistanceSearchActive}
                       className="w-full p-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:bg-gray-100 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none"
                    >
                      <option value="">All Districts</option>
                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
                    </select>
+                   {isDistanceSearchActive && <p className="text-[10px] text-gray-500 mt-1">State/District is disabled when searching by distance.</p>}
                  </div>
 
                  {/* Distance Filter */}
@@ -431,7 +442,8 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedRadius !== null ? selectedRadius : 'all'}
                       onChange={handleRadiusChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 disabled:opacity-50 disabled:bg-gray-100"
+                      disabled={isLocationSearchActive}
                    >
                      <option value="all">All India</option>
                      <option value="5">Within 5 km</option>
@@ -440,6 +452,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      <option value="50">Within 50 km</option>
                      <option value="100">Within 100 km</option>
                    </select>
+                   {isLocationSearchActive && <p className="text-[10px] text-gray-500 mt-1">Distance is disabled when a location is selected.</p>}
                    {locationError && <p className="text-[10px] text-red-500 mt-1">{locationError}</p>}
                    {userCoords && selectedRadius !== null && (
                      <p className="text-[10px] text-green-600 mt-1 flex items-center">
