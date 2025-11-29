@@ -172,6 +172,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   };
 
   const districts = useMemo(() => {
+    if (!selectedState) return [];
     return LOCATION_DATA.find(s => s.name === selectedState)?.districts || [];
   }, [selectedState]);
 
@@ -218,6 +219,17 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
     }
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedState('');
+    setSelectedDistrict('');
+    setSelectedCategory('');
+    setSelectedSubCategory('');
+    setSelectedRadius(null);
+    setUserCoords(null);
+    setLocationError('');
+  };
+
   return (
     <div className="bg-brand-surface min-h-screen py-8">
       <div className="container mx-auto px-4">
@@ -230,14 +242,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-lg flex items-center gap-2"><Filter size={18}/> Filters</h3>
                 <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedState('');
-                    setSelectedDistrict('');
-                    setSelectedCategory('');
-                    setSelectedSubCategory('');
-                    setSelectedRadius(null);
-                  }}
+                  onClick={clearFilters}
                   className="text-xs text-red-500 font-bold hover:underline"
                 >
                   Clear All
@@ -254,7 +259,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                        placeholder="Name, Skill..." 
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
-                       className="w-full pl-9 pr-3 py-2 border border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none bg-gray-800 text-white placeholder-gray-400 caret-white"
+                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none"
                      />
                      <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
                    </div>
@@ -277,7 +282,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedState} 
                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                      className="w-full p-2 border border-gray-600 rounded-lg text-sm mb-2 bg-gray-800 text-white"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50"
                    >
                      <option value="">All States</option>
                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
@@ -286,7 +291,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                       value={selectedDistrict} 
                       onChange={(e) => setSelectedDistrict(e.target.value)}
                       disabled={!selectedState}
-                      className="w-full p-2 border border-gray-600 rounded-lg text-sm disabled:bg-gray-700 disabled:text-gray-500 bg-gray-800 text-white"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:bg-gray-100 bg-gray-50"
                    >
                      <option value="">All Districts</option>
                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
@@ -302,19 +307,19 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedRadius !== null ? selectedRadius : 'all'}
                       onChange={handleRadiusChange}
-                      className="w-full p-2 border border-gray-600 rounded-lg text-sm bg-gray-800 text-white"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
                    >
                      <option value="all">All India</option>
-                     <option value="5">5 km</option>
-                     <option value="10">10 km</option>
-                     <option value="25">25 km</option>
-                     <option value="50">50 km</option>
-                     <option value="100">100 km</option>
+                     <option value="5">Within 5 km</option>
+                     <option value="10">Within 10 km</option>
+                     <option value="25">Within 25 km</option>
+                     <option value="50">Within 50 km</option>
+                     <option value="100">Within 100 km</option>
                    </select>
                    {locationError && <p className="text-[10px] text-red-500 mt-1">{locationError}</p>}
-                   {userCoords && selectedRadius && (
+                   {userCoords && selectedRadius !== null && (
                      <p className="text-[10px] text-green-600 mt-1 flex items-center">
-                       <CheckCircle size={10} className="mr-1" /> Location Detected
+                       <CheckCircle size={10} className="mr-1" /> Location active
                      </p>
                    )}
                  </div>
@@ -325,7 +330,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <select 
                       value={selectedCategory} 
                       onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubCategory(''); }}
-                      className="w-full p-2 border border-gray-600 rounded-lg text-sm mb-2 bg-gray-800 text-white"
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50"
                    >
                      <option value="">All Categories</option>
                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -335,7 +340,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      <select 
                         value={selectedSubCategory} 
                         onChange={(e) => setSelectedSubCategory(e.target.value)}
-                        className="w-full p-2 border border-gray-600 rounded-lg text-sm animate-fade-in bg-gray-800 text-white"
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm animate-fade-in bg-gray-50"
                      >
                        <option value="">All Sub-categories</option>
                        {subCategories.map(sc => <option key={sc} value={sc}>{sc}</option>)}
@@ -359,6 +364,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <option>Recommended</option>
                    <option>Rating: High to Low</option>
                    <option>Price: Low to High</option>
+                   {selectedRadius !== null && <option>Distance: Nearest</option>}
                  </select>
                </div>
             </div>
@@ -414,14 +420,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      </p>
                    )}
                    <button 
-                      onClick={() => {
-                          setSearchTerm('');
-                          setSelectedState('');
-                          setSelectedDistrict('');
-                          setSelectedCategory('');
-                          setSelectedSubCategory('');
-                          setSelectedRadius(null);
-                      }}
+                      onClick={clearFilters}
                       className="mt-4 text-brand-primary font-bold hover:underline"
                    >
                      Clear All Filters
