@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Hero from './Hero';
 import SectionHeading from './SectionHeading';
@@ -229,7 +230,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const scrollContainer = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
     if (ref.current) {
       const { clientWidth } = ref.current;
-      const scrollAmount = direction === 'left' ? -clientWidth / 2 : clientWidth / 2;
+      // FIX: Scroll by a more substantial amount (80% of visible width) to ensure movement is noticeable.
+      const scrollAmount = direction === 'left' ? -clientWidth * 0.8 : clientWidth * 0.8;
       ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -244,7 +246,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             if (scrollLeft + clientWidth >= scrollWidth - 50) {
                 trendingRef.current.scrollTo({ left: 0, behavior: 'smooth' });
             } else {
-                trendingRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                // FIX: Use a responsive scroll amount instead of a fixed value.
+                trendingRef.current.scrollBy({ left: clientWidth / 2, behavior: 'smooth' });
             }
         }
     }, 6000); // 6 seconds

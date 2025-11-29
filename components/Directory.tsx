@@ -93,7 +93,11 @@ const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number }
         </div>
         <div className="flex gap-2">
            <FollowButton artistId={artist.id} artistName={artist.name} initialIsFollowing={artist.isFollowed} compact />
-           <button className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-surface text-brand-textMain hover:bg-gray-200 transition">View Profile</button>
+           <button 
+              onClick={() => alert(`Viewing profile for ${artist.name}`)}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-surface text-brand-textMain hover:bg-gray-200 transition">
+              View Profile
+           </button>
            <button className="px-4 py-2 rounded-lg text-xs font-bold bg-brand-primary text-white hover:bg-brand-primaryDark transition shadow-md hover:-translate-y-0.5">Book Now</button>
         </div>
       </div>
@@ -101,12 +105,43 @@ const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number }
   </div>
 );
 
+const MapMarker = ({ id, position, isSelected, onClick, children }: { 
+    id: string, 
+    position: { top: string, left: string }, 
+    isSelected: boolean,
+    onClick: (id: string) => void, 
+    children: React.ReactNode 
+}) => (
+    <div 
+        className="absolute transform -translate-x-1/2 -translate-y-full"
+        style={{ ...position, zIndex: isSelected ? 20 : 10 }}
+    >
+        <div className="relative group">
+            <button 
+                onClick={() => onClick(id)}
+                className="focus:outline-none"
+                aria-label={`View details for ${id}`}
+            >
+                <MapPin size={32} className={`text-brand-primary fill-current drop-shadow-lg cursor-pointer transition-transform duration-200 ${isSelected ? 'scale-125' : 'hover:scale-110'}`} />
+            </button>
+            {isSelected && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-56 bg-white p-3 rounded-lg shadow-xl z-20 border border-gray-200 animate-fade-in">
+                    {children}
+                    <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-white transform rotate-45"></div>
+                </div>
+            )}
+        </div>
+    </div>
+);
+
+
 // --- Map View Component ---
-const ArtistMap = ({ artists, places, isRealWorld, onMarkerHover }: { 
+const ArtistMap = ({ artists, places, isRealWorld, selectedMarkerId, onMarkerClick }: { 
     artists: (DirectoryArtist & { distance?: number })[], 
     places: MapPlace[],
     isRealWorld: boolean,
-    onMarkerHover: (id: string | null) => void 
+    selectedMarkerId: string | null,
+    onMarkerClick: (id: string) => void 
 }) => {
   const [positions, setPositions] = useState<Record<string, { top: string, left: string }>>({});
 
@@ -167,10 +202,19 @@ const ArtistMap = ({ artists, places, isRealWorld, onMarkerHover }: {
                         key={place.placeId || place.title} 
                         id={place.placeId || place.title}
                         position={positions[place.placeId || place.title]}
-                        onHover={onMarkerHover}
+                        isSelected={selectedMarkerId === (place.placeId || place.title)}
+                        onClick={onMarkerClick}
                     >
-                        <h4 className="font-bold text-sm">{place.title}</h4>
-                        <p className="text-xs text-gray-500">{place.formattedAddress}</p>
+                        <h4 className="font-bold text-sm text-brand-textMain">{place.title}</h4>
+                        <p className="text-xs text-gray-500 mb-2">{place.formattedAddress}</p>
+                        <a 
+                            href={place.sourceUri} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="text-[10px] bg-brand-primary text-white py-1.5 rounded font-bold w-full block text-center hover:bg-brand-primaryDark transition"
+                        >
+                            View on Maps
+                        </a>
                     </MapMarker>
                 )
             ))
@@ -180,14 +224,26 @@ const ArtistMap = ({ artists, places, isRealWorld, onMarkerHover }: {
                     key={artist.id} 
                     id={artist.id}
                     position={{ top: `${artist.lat}%`, left: `${artist.lng}%` }}
-                    onHover={onMarkerHover}
+                    isSelected={selectedMarkerId === artist.id}
+                    onClick={onMarkerClick}
                 >
-                    <div className="flex items-center gap-2">
-                        <img src={artist.imageUrl} className="w-8 h-8 rounded-full object-cover"/>
-                        <div>
-                            <h4 className="font-bold text-sm">{artist.name}</h4>
+                    <div className="flex items-start gap-3">
+                        <img src={artist.imageUrl} className="w-12 h-12 rounded-lg object-cover flex-shrink-0"/>
+                        <div className="flex-grow">
+                            <h4 className="font-bold text-sm text-brand-textMain truncate">{artist.name}</h4>
                             <p className="text-xs text-gray-500">{artist.category}</p>
                         </div>
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-gray-100 flex gap-2">
+                        <button 
+                            onClick={() => alert(`Viewing profile for ${artist.name}`)}
+                            className="flex-1 text-[10px] bg-brand-surface text-brand-textMain py-1.5 rounded font-bold hover:bg-gray-200 transition"
+                        >
+                            View Profile
+                        </button>
+                        <button className="flex-1 text-[10px] bg-brand-primary text-white py-1.5 rounded font-bold hover:bg-brand-primaryDark transition">
+                            Book Now
+                        </button>
                     </div>
                 </MapMarker>
             ))
@@ -196,23 +252,6 @@ const ArtistMap = ({ artists, places, isRealWorld, onMarkerHover }: {
   );
 };
 
-const MapMarker = ({ id, position, onHover, children }: { id: string, position: { top: string, left: string }, onHover: (id: string | null) => void, children: React.ReactNode }) => (
-    <div 
-        className="absolute transform -translate-x-1/2 -translate-y-full"
-        style={{ ...position }}
-        onMouseEnter={() => onHover(id)}
-        onMouseLeave={() => onHover(null)}
-    >
-        <div className="relative group">
-            <MapPin size={32} className="text-brand-primary fill-current drop-shadow-lg cursor-pointer transition-transform duration-200 group-hover:scale-125" />
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-white p-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-gray-200">
-                {children}
-                <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-white transform rotate-45"></div>
-            </div>
-        </div>
-    </div>
-);
-
 
 const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -220,7 +259,8 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   const [selectedDistrict, setSelectedDistrict] = useState(initialFilters?.district || '');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
-  
+  const [experienceRange, setExperienceRange] = useState<[number, number]>([0, 50]); // Min, Max
+
   const [selectedRadius, setSelectedRadius] = useState<number | null>(null);
   const [userCoords, setUserCoords] = useState<{lat: number, lng: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -231,10 +271,17 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
 
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+
 
   // Control variables for mutually exclusive filters
   const isDistanceSearchActive = selectedRadius !== null;
   const isLocationSearchActive = !!selectedState;
+  
+  const handleMarkerClick = (id: string) => {
+    setSelectedMarkerId(prevId => (prevId === id ? null : id));
+  };
+
 
   useEffect(() => {
     if (initialFilters) {
@@ -319,6 +366,12 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
       if (selectedCategory && artist.category !== selectedCategory) return false;
       if (selectedSubCategory && artist.subcategory !== selectedSubCategory) return false;
 
+      // Experience filter
+      const artistExp = artist.experience ?? 0;
+      if (artistExp < experienceRange[0] || (experienceRange[1] < 50 && artistExp > experienceRange[1])) {
+        return false;
+      }
+
       // Apply mutually exclusive location filters
       if (isDistanceSearch) {
         return artist.distance !== undefined && artist.distance <= selectedRadius;
@@ -335,7 +388,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
     }
 
     return results;
-  }, [searchTerm, selectedState, selectedDistrict, selectedCategory, selectedSubCategory, selectedRadius, userCoords]);
+  }, [searchTerm, selectedState, selectedDistrict, selectedCategory, selectedSubCategory, selectedRadius, userCoords, experienceRange]);
 
 
   const handleRadiusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -356,6 +409,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
     setSelectedDistrict('');
     setSelectedCategory('');
     setSelectedSubCategory('');
+    setExperienceRange([0, 50]);
     setSelectedRadius(null);
     setUserCoords(null);
     setLocationError('');
@@ -481,6 +535,53 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      </AppSelect>
                    )}
                  </div>
+
+                 {/* Experience Range Slider */}
+                 <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex justify-between items-center">
+                        <span>Experience</span>
+                        <span className="font-mono bg-gray-100 text-gray-700 text-[10px] px-2 py-0.5 rounded">
+                            {experienceRange[0]}-{experienceRange[1] === 50 ? '50+' : experienceRange[1]} yrs
+                        </span>
+                    </label>
+                    <div className="relative h-5 flex items-center">
+                        {/* Track */}
+                        <div className="relative w-full h-1 bg-gray-200 rounded-full">
+                            <div 
+                                className="absolute h-1 bg-brand-primary rounded-full"
+                                style={{
+                                    left: `${(experienceRange[0] / 50) * 100}%`,
+                                    right: `${100 - (experienceRange[1] / 50) * 100}%`
+                                }}
+                            />
+                        </div>
+                        {/* Min Input */}
+                        <input
+                            type="range"
+                            min="0"
+                            max="50"
+                            value={experienceRange[0]}
+                            onChange={(e) => {
+                                const value = Math.min(Number(e.target.value), experienceRange[1] - 1);
+                                setExperienceRange([value, experienceRange[1]]);
+                            }}
+                            className="absolute w-full h-1 appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand-primary [&::-moz-range-thumb]:cursor-pointer"
+                        />
+                        {/* Max Input */}
+                        <input
+                            type="range"
+                            min="0"
+                            max="50"
+                            value={experienceRange[1]}
+                            onChange={(e) => {
+                                const value = Math.max(Number(e.target.value), experienceRange[0] + 1);
+                                setExperienceRange([experienceRange[0], value]);
+                            }}
+                            className="absolute w-full h-1 appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand-primary [&::-moz-range-thumb]:cursor-pointer"
+                        />
+                    </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -587,7 +688,8 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                 artists={filteredArtists} 
                 places={realWorldPlaces} 
                 isRealWorld={useRealWorldMap}
-                onMarkerHover={() => {}} // Placeholder for hover logic if needed later
+                selectedMarkerId={selectedMarkerId}
+                onMarkerClick={handleMarkerClick}
               />
             )}
           </div>

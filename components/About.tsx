@@ -111,7 +111,7 @@ const About: React.FC = () => {
   const { showToast } = useToast();
   
   const teamMembers = [
-    { name: 'Vijay Kumar', title: 'Founder', img: 'https://example.com/vijay-blue-suit.jpg', link: '#' },
+    { name: 'Vijay Kumar', title: 'Founder', img: 'https://i.ibb.co/5FR2g6N/vijay-kumar-new-final.png', link: '#' },
     { name: 'Aisha Sharma', title: 'Lead Developer (React/Node)', img: 'https://i.pravatar.cc/300?img=25', link: '#' },
     { name: 'Rohan Gupta', title: 'Content Creator', img: 'https://i.pravatar.cc/300?img=32', link: '#' },
     { name: 'Priya Singh', title: 'Artist Mentor', img: 'https://i.pravatar.cc/300?img=35', link: '#' },
@@ -335,7 +335,7 @@ const About: React.FC = () => {
             className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-3 rounded-full border border-white/20"
           >
             <img
-              src="https://example.com/vijay-blue-suit.jpg"
+              src="https://i.ibb.co/5FR2g6N/vijay-kumar-new-final.png"
               alt="Vijay Kumar, Founder of ArtistsHub India, in a professional blue suit"
               className="w-16 h-16 rounded-full border-2 border-white object-cover bg-gray-300"
             />
@@ -363,19 +363,18 @@ const About: React.FC = () => {
               <p className="text-xl italic text-gray-700">{t.story_quote}</p>
             </blockquote>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.7 }}
+          <div
             className="relative flex justify-center items-center"
           >
-            <img
-              src="https://example.com/sanget-logo.png"
-              alt="Sanget Kalakar Union Logo with a harp icon and stars"
-              className="w-80 h-80 object-contain p-4 border-4 border-orange-400 rounded-full bg-white shadow-xl"
+            <motion.img
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              src="https://i.ibb.co/SYVQ3cN/sangeet-kalakar-union-logo.png"
+              alt="Sangeet Kalakar Union Official Logo"
+              className="w-64 h-64 rounded-full object-cover border-4 border-orange-500 shadow-md hover:scale-105 transition duration-300 ease-in-out"
             />
-          </motion.div>
+          </div>
         </div>
       </section>
 
