@@ -1,6 +1,7 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle } from 'lucide-react';
+import { CheckCircle, Star, Navigation, MapPin, Search, Filter, X, ChevronDown, Map as MapIcon, AlertCircle, List, Loader2 } from 'lucide-react';
 import { BadgeType, PageData, DirectoryArtist } from '../types';
 import { DIRECTORY_ARTISTS, LOCATION_DATA, CATEGORIES, SUBCATEGORIES } from '../constants';
 import FollowButton from './FollowButton';
@@ -100,6 +101,119 @@ const ArtistListCard: React.FC<{ artist: DirectoryArtist & { distance?: number }
   </div>
 );
 
+// --- Map View Component ---
+const ArtistMap = ({ artists, places, isRealWorld, onMarkerHover }: { 
+    artists: (DirectoryArtist & { distance?: number })[], 
+    places: MapPlace[],
+    isRealWorld: boolean,
+    onMarkerHover: (id: string | null) => void 
+}) => {
+  const [positions, setPositions] = useState<Record<string, { top: string, left: string }>>({});
+
+  useEffect(() => {
+    if (isRealWorld && places.length > 0) {
+        const placesWithCoords = places.filter(p => p.latitude && p.longitude);
+        if(placesWithCoords.length === 0) {
+            setPositions({});
+            return;
+        };
+
+        const bounds = placesWithCoords.reduce(
+          (acc, place) => ({
+            minLat: Math.min(acc.minLat, place.latitude!),
+            maxLat: Math.max(acc.maxLat, place.latitude!),
+            minLng: Math.min(acc.minLng, place.longitude!),
+            maxLng: Math.max(acc.maxLng, place.longitude!),
+          }),
+          { minLat: 90, maxLat: -90, minLng: 180, maxLng: -180 }
+        );
+
+        const latRange = Math.abs(bounds.maxLat - bounds.minLat);
+        const lngRange = Math.abs(bounds.maxLng - bounds.minLng);
+        const PADDING = 0.1;
+
+        const newPositions = placesWithCoords.reduce((acc, place) => {
+            const topPercent = latRange === 0 ? 50 : 100 - (((place.latitude! - bounds.minLat) / latRange) * (100 - PADDING * 200) + PADDING * 100);
+            const leftPercent = lngRange === 0 ? 50 : (((place.longitude! - bounds.minLng) / lngRange) * (100 - PADDING * 200) + PADDING * 100);
+            acc[place.placeId || place.title] = { top: `${topPercent}%`, left: `${leftPercent}%` };
+            return acc;
+        }, {} as Record<string, {top: string, left: string}>);
+
+        setPositions(newPositions);
+    }
+  }, [places, isRealWorld]);
+
+  const items = isRealWorld ? places : artists;
+
+  return (
+    <div className="relative w-full h-[600px] lg:h-full bg-gray-200 rounded-lg shadow-inner overflow-hidden border border-gray-300 animate-fade-in">
+        <img src="https://picsum.photos/seed/mapbg/1200/800" alt="Map background" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent"></div>
+
+        {items.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-lg">
+                    <MapIcon size={32} className="mx-auto text-gray-400 mb-2"/>
+                    <p className="font-bold text-gray-700">No locations to display</p>
+                    <p className="text-xs text-gray-500">Adjust your filters to see results on the map.</p>
+                </div>
+            </div>
+        )}
+
+        {isRealWorld ? (
+            places.map(place => (
+                positions[place.placeId || place.title] && (
+                    <MapMarker 
+                        key={place.placeId || place.title} 
+                        id={place.placeId || place.title}
+                        position={positions[place.placeId || place.title]}
+                        onHover={onMarkerHover}
+                    >
+                        <h4 className="font-bold text-sm">{place.title}</h4>
+                        <p className="text-xs text-gray-500">{place.formattedAddress}</p>
+                    </MapMarker>
+                )
+            ))
+        ) : (
+            artists.map(artist => (
+                <MapMarker 
+                    key={artist.id} 
+                    id={artist.id}
+                    position={{ top: `${artist.lat}%`, left: `${artist.lng}%` }}
+                    onHover={onMarkerHover}
+                >
+                    <div className="flex items-center gap-2">
+                        <img src={artist.imageUrl} className="w-8 h-8 rounded-full object-cover"/>
+                        <div>
+                            <h4 className="font-bold text-sm">{artist.name}</h4>
+                            <p className="text-xs text-gray-500">{artist.category}</p>
+                        </div>
+                    </div>
+                </MapMarker>
+            ))
+        )}
+    </div>
+  );
+};
+
+const MapMarker = ({ id, position, onHover, children }: { id: string, position: { top: string, left: string }, onHover: (id: string | null) => void, children: React.ReactNode }) => (
+    <div 
+        className="absolute transform -translate-x-1/2 -translate-y-full"
+        style={{ ...position }}
+        onMouseEnter={() => onHover(id)}
+        onMouseLeave={() => onHover(null)}
+    >
+        <div className="relative group">
+            <MapPin size={32} className="text-brand-primary fill-current drop-shadow-lg cursor-pointer transition-transform duration-200 group-hover:scale-125" />
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-white p-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-gray-200">
+                {children}
+                <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-white transform rotate-45"></div>
+            </div>
+        </div>
+    </div>
+);
+
+
 const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState(initialFilters?.state || '');
@@ -107,43 +221,44 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   
-  // Distance Filter States
   const [selectedRadius, setSelectedRadius] = useState<number | null>(null);
   const [userCoords, setUserCoords] = useState<{lat: number, lng: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
 
-  // Google Maps Grounding State
   const [useRealWorldMap, setUseRealWorldMap] = useState(false);
   const [realWorldPlaces, setRealWorldPlaces] = useState<MapPlace[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
 
-  // Handle Initial Filters update
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+
   useEffect(() => {
     if (initialFilters) {
       if (initialFilters.state) setSelectedState(initialFilters.state);
       if (initialFilters.district) setSelectedDistrict(initialFilters.district);
       if (initialFilters.nearby) {
-        setSelectedRadius(25); // Default to 25km if nearby requested
+        setSelectedRadius(25);
         detectUserLocation();
       }
     }
   }, [initialFilters]);
 
-  // Handle Real World Search
   useEffect(() => {
-    if (useRealWorldMap && searchTerm.length > 3) {
-      const fetchPlaces = async () => {
+    const performSearch = async () => {
+      if (useRealWorldMap && searchTerm.length > 2) {
         setIsLoadingPlaces(true);
-        // Pass user coords if available to bias search
+        setRealWorldPlaces([]);
         const places = await searchRealWorldPlaces(searchTerm, userCoords?.lat, userCoords?.lng);
         setRealWorldPlaces(places);
         setIsLoadingPlaces(false);
-      };
-      // Debounce slightly
-      const timer = setTimeout(fetchPlaces, 800);
-      return () => clearTimeout(timer);
-    }
+      }
+    };
+  
+    const debounceTimer = setTimeout(() => {
+      performSearch();
+    }, 500);
+  
+    return () => clearTimeout(debounceTimer);
   }, [useRealWorldMap, searchTerm, userCoords]);
 
   const detectUserLocation = () => {
@@ -162,7 +277,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
           console.error("Error detecting location:", error);
           setLocationError('Could not detect location. Please enable GPS.');
           setIsLocating(false);
-          setSelectedRadius(null); // Reset if failed
+          setSelectedRadius(null);
         }
       );
     } else {
@@ -189,7 +304,6 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
       if (selectedSubCategory && artist.subcategory !== selectedSubCategory) return false;
       return true;
     }).map(artist => {
-        // Calculate Distance if user coords available
         if (userCoords && artist.geoLat && artist.geoLng) {
             const dist = calculateDistance(userCoords.lat, userCoords.lng, artist.geoLat, artist.geoLng);
             return { ...artist, distance: dist };
@@ -197,10 +311,8 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
         return { ...artist, distance: undefined };
     });
 
-    // Filter by Radius
     if (selectedRadius !== null && userCoords) {
         artists = artists.filter(a => a.distance !== undefined && a.distance <= selectedRadius);
-        // Sort by nearest
         artists.sort((a, b) => (a.distance || 0) - (b.distance || 0));
     }
 
@@ -228,7 +340,10 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
     setSelectedRadius(null);
     setUserCoords(null);
     setLocationError('');
+    setRealWorldPlaces([]);
   };
+
+  const resultsCount = useRealWorldMap ? realWorldPlaces.length : filteredArtists.length;
 
   return (
     <div className="bg-brand-surface min-h-screen py-8">
@@ -256,7 +371,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    <div className="relative">
                      <input 
                        type="text" 
-                       placeholder="Name, Skill..." 
+                       placeholder="Name, Skill, or Place..." 
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none"
@@ -298,7 +413,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                    </select>
                  </div>
 
-                 {/* Distance Filter (NEW) */}
+                 {/* Distance Filter */}
                  <div>
                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex justify-between">
                      Distance 
@@ -353,80 +468,92 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
 
           {/* Results Area */}
           <div className="lg:w-3/4">
-            <div className="mb-4 flex justify-between items-center">
+            <div className="mb-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                <p className="text-sm text-gray-500">
-                 Showing <strong>{useRealWorldMap ? realWorldPlaces.length : filteredArtists.length}</strong> results
+                 Showing <strong>{resultsCount}</strong> results
                  {useRealWorldMap && <span className="ml-2 text-brand-primary font-bold">(Google Maps Data)</span>}
                </p>
-               <div className="flex items-center gap-2">
-                 <span className="text-xs font-bold text-gray-500">Sort By:</span>
-                 <select className="text-xs border-none bg-transparent font-bold text-brand-textMain focus:ring-0 cursor-pointer">
-                   <option>Recommended</option>
-                   <option>Rating: High to Low</option>
-                   <option>Price: Low to High</option>
-                   {selectedRadius !== null && <option>Distance: Nearest</option>}
-                 </select>
+               <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 p-1 bg-gray-200 rounded-lg">
+                    <button onClick={() => setViewMode('list')} className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'}`}><List size={14}/> List</button>
+                    <button onClick={() => setViewMode('map')} className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors ${viewMode === 'map' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500 hover:bg-gray-300/50'}`}><MapIcon size={14}/> Map</button>
+                  </div>
+                 <div className="flex items-center gap-2">
+                   <span className="text-xs font-bold text-gray-500">Sort By:</span>
+                   <select className="text-xs border-none bg-transparent font-bold text-brand-textMain focus:ring-0 cursor-pointer">
+                     <option>Recommended</option>
+                     <option>Rating: High to Low</option>
+                     <option>Price: Low to High</option>
+                     {selectedRadius !== null && <option>Distance: Nearest</option>}
+                   </select>
+                 </div>
                </div>
             </div>
 
-            {/* REAL WORLD RESULTS */}
-            {useRealWorldMap ? (
-              <div className="space-y-4">
-                {isLoadingPlaces ? (
-                  <div className="text-center py-10 text-gray-500">
-                    <div className="animate-spin w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full mx-auto mb-3"></div>
-                    Searching Google Maps...
-                  </div>
-                ) : realWorldPlaces.length > 0 ? (
-                  realWorldPlaces.map((place, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-card shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
-                       <div className="w-16 h-16 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                         <MapPin className="text-brand-primary" />
-                       </div>
-                       <div className="flex-grow">
-                         <h3 className="font-bold text-brand-textMain">{place.title}</h3>
-                         <p className="text-sm text-gray-500 mb-2">{place.formattedAddress}</p>
-                         <a href={place.sourceUri} target="_blank" rel="noreferrer" className="text-xs text-brand-primary font-bold hover:underline flex items-center">
-                           View on Google Maps <Navigation size={10} className="ml-1" />
-                         </a>
-                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-10 bg-white rounded-card">
-                    <p className="text-gray-500">No Google Maps results found. Try a specific search term.</p>
-                  </div>
-                )}
+            {isLoadingPlaces ? (
+              <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-sm">
+                <Loader2 size={32} className="text-brand-primary animate-spin" />
               </div>
+            ) : viewMode === 'list' ? (
+                useRealWorldMap ? (
+                    <div className="space-y-4">
+                      {realWorldPlaces.length > 0 ? (
+                        realWorldPlaces.map((place, idx) => (
+                          <div key={idx} className="bg-white p-4 rounded-card shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
+                            <div className="w-16 h-16 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <MapPin className="text-brand-primary" />
+                            </div>
+                            <div className="flex-grow">
+                                <h3 className="font-bold text-brand-textMain">{place.title}</h3>
+                                <p className="text-sm text-gray-500 mb-2">{place.formattedAddress}</p>
+                                <a href={place.sourceUri} target="_blank" rel="noreferrer" className="text-xs text-brand-primary font-bold hover:underline flex items-center">
+                                View on Google Maps <Navigation size={10} className="ml-1" />
+                                </a>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-10 bg-white rounded-card">
+                          <p className="text-gray-500">No Google Maps results found. Try a specific search term.</p>
+                        </div>
+                      )}
+                    </div>
+                ) : (
+                  filteredArtists.length > 0 ? (
+                      <div>
+                      {filteredArtists.map(artist => (
+                          <ArtistListCard key={artist.id} artist={artist} />
+                      ))}
+                      </div>
+                  ) : (
+                      <div className="bg-white p-12 rounded-card text-center shadow-sm">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                            <Search size={32} />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800">No artists found</h3>
+                        <p className="text-gray-500">Try adjusting your filters, search terms, or increasing the distance.</p>
+                        {selectedRadius && (
+                            <p className="text-xs text-orange-500 mt-2 font-medium flex items-center justify-center">
+                            <AlertCircle size={12} className="mr-1" />
+                            You are filtering within {selectedRadius} km. Try 'All India'.
+                            </p>
+                        )}
+                        <button 
+                            onClick={clearFilters}
+                            className="mt-4 text-brand-primary font-bold hover:underline"
+                        >
+                            Clear All Filters
+                        </button>
+                      </div>
+                  )
+                )
             ) : (
-              /* INTERNAL DIRECTORY RESULTS */
-              filteredArtists.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredArtists.map(artist => (
-                    <ArtistListCard key={artist.id} artist={artist} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white p-12 rounded-card text-center shadow-sm">
-                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                      <Search size={32} />
-                   </div>
-                   <h3 className="text-lg font-bold text-gray-800">No artists found</h3>
-                   <p className="text-gray-500">Try adjusting your filters, search terms, or increasing the distance.</p>
-                   {selectedRadius && (
-                     <p className="text-xs text-orange-500 mt-2 font-medium flex items-center justify-center">
-                       <AlertCircle size={12} className="mr-1" />
-                       You are filtering within {selectedRadius} km. Try 'All India'.
-                     </p>
-                   )}
-                   <button 
-                      onClick={clearFilters}
-                      className="mt-4 text-brand-primary font-bold hover:underline"
-                   >
-                     Clear All Filters
-                   </button>
-                </div>
-              )
+              <ArtistMap 
+                artists={filteredArtists} 
+                places={realWorldPlaces} 
+                isRealWorld={useRealWorldMap}
+                onMarkerHover={() => {}} // Placeholder for hover logic if needed later
+              />
             )}
           </div>
         </div>
