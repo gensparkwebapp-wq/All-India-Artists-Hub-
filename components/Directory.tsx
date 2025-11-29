@@ -6,6 +6,7 @@ import { DIRECTORY_ARTISTS, LOCATION_DATA, CATEGORIES, SUBCATEGORIES } from '../
 import FollowButton from './FollowButton';
 import SectionHeading from './SectionHeading';
 import { searchRealWorldPlaces, MapPlace } from '../services/genai';
+import AppSelect from './AppSelect';
 
 // --- Helper: Haversine Distance Calculation ---
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -392,9 +393,9 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                        placeholder="Name, Skill, or Place..." 
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
-                       className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none"
+                       className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary outline-none"
                      />
-                     <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                    </div>
                  </div>
 
@@ -410,26 +411,24 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                  </div>
 
                  {/* Location */}
-                 <div>
+                 <div className="space-y-2">
                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Location</label>
-                   <select 
+                   <AppSelect 
                       value={selectedState} 
                       onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none disabled:opacity-50 disabled:bg-gray-100"
                       disabled={isDistanceSearchActive}
                    >
                      <option value="">All States</option>
                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                   </select>
-                   <select 
+                   </AppSelect>
+                   <AppSelect 
                       value={selectedDistrict} 
                       onChange={(e) => setSelectedDistrict(e.target.value)}
                       disabled={!selectedState || isDistanceSearchActive}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:bg-gray-100 bg-gray-50 focus:ring-2 focus:ring-brand-primary outline-none"
                    >
                      <option value="">All Districts</option>
                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                   </select>
+                   </AppSelect>
                    {isDistanceSearchActive && <p className="text-[10px] text-gray-500 mt-1">State/District is disabled when searching by distance.</p>}
                  </div>
 
@@ -439,10 +438,9 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      Distance 
                      {isLocating && <span className="text-brand-primary animate-pulse">Locating...</span>}
                    </label>
-                   <select 
+                   <AppSelect 
                       value={selectedRadius !== null ? selectedRadius : 'all'}
                       onChange={handleRadiusChange}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 disabled:opacity-50 disabled:bg-gray-100"
                       disabled={isLocationSearchActive}
                    >
                      <option value="all">All India</option>
@@ -451,7 +449,7 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                      <option value="25">Within 25 km</option>
                      <option value="50">Within 50 km</option>
                      <option value="100">Within 100 km</option>
-                   </select>
+                   </AppSelect>
                    {isLocationSearchActive && <p className="text-[10px] text-gray-500 mt-1">Distance is disabled when a location is selected.</p>}
                    {locationError && <p className="text-[10px] text-red-500 mt-1">{locationError}</p>}
                    {userCoords && selectedRadius !== null && (
@@ -462,26 +460,25 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                  </div>
 
                  {/* Category */}
-                 <div>
+                 <div className="space-y-2">
                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Category</label>
-                   <select 
+                   <AppSelect 
                       value={selectedCategory} 
                       onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubCategory(''); }}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2 bg-gray-50"
                    >
                      <option value="">All Categories</option>
                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                   </select>
+                   </AppSelect>
                    
                    {selectedCategory && subCategories.length > 0 && (
-                     <select 
+                     <AppSelect 
                         value={selectedSubCategory} 
                         onChange={(e) => setSelectedSubCategory(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm animate-fade-in bg-gray-50"
+                        className="animate-fade-in"
                      >
                        <option value="">All Sub-categories</option>
                        {subCategories.map(sc => <option key={sc} value={sc}>{sc}</option>)}
-                     </select>
+                     </AppSelect>
                    )}
                  </div>
               </div>
@@ -518,12 +515,12 @@ const Directory: React.FC<{ initialFilters?: PageData }> = ({ initialFilters }) 
                   </div>
                  <div className="flex items-center gap-2">
                    <span className="text-xs font-bold text-gray-500">Sort By:</span>
-                   <select className="text-xs border-none bg-transparent font-bold text-brand-textMain focus:ring-0 cursor-pointer">
+                   <AppSelect className="text-xs font-bold !py-1 !px-2 !pr-6 border-none !shadow-none bg-transparent">
                      <option>Recommended</option>
                      <option>Rating: High to Low</option>
                      <option>Price: Low to High</option>
                      {selectedRadius !== null && <option>Distance: Nearest</option>}
-                   </select>
+                   </AppSelect>
                  </div>
                </div>
             </div>

@@ -11,6 +11,7 @@ import {
   User, Briefcase, Youtube, ChevronDown, Sparkles, Flame, ThumbsUp, ChevronLeft, ChevronRight, List, Map as MapIcon, Zap
 } from 'lucide-react';
 import { PageData } from '../types';
+import AppSelect from './AppSelect';
 
 interface HomeProps {
   onNavigate: (page: string, data?: PageData) => void;
@@ -445,27 +446,18 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               <div className="lg:w-1/3 bg-white p-8 rounded-card shadow-card border border-transparent h-fit">
                 <h4 className="font-bold text-xl mb-6 text-brand-textMain">Quick Filter</h4>
                 <div className="space-y-4">
-                   <div className="relative">
-                     <select value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none">
-                       <option value="">Select State</option>
-                       {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                     </select>
-                     <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
-                   </div>
-                   <div className="relative">
-                     <select value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)} disabled={!selectedState} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none disabled:opacity-50">
-                       <option value="">Select District</option>
-                       {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                     </select>
-                     <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
-                   </div>
-                   <div className="relative">
-                     <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full border border-gray-200 p-3 rounded-card text-sm bg-brand-surface text-brand-textMain focus:ring-2 focus:ring-brand-primary outline-none appearance-none">
-                       <option value="">All Categories</option>
-                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                     </select>
-                     <ChevronDown size={16} className="absolute right-3 top-3.5 text-gray-400 pointer-events-none" />
-                   </div>
+                   <AppSelect value={selectedState} onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}>
+                     <option value="">Select State</option>
+                     {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                   </AppSelect>
+                   <AppSelect value={selectedDistrict} onChange={(e) => setSelectedDistrict(e.target.value)} disabled={!selectedState}>
+                     <option value="">Select District</option>
+                     {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                   </AppSelect>
+                   <AppSelect value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                     <option value="">All Categories</option>
+                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                   </AppSelect>
                    <button className="w-full bg-brand-primary text-white py-3 rounded-card font-bold mt-4 shadow-md hover:bg-brand-primaryDark transition hover:-translate-y-0.5">Open Full Directory</button>
                 </div>
                 <div className="mt-8">

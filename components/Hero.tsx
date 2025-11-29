@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Briefcase, Mic, ChevronDown, MapPin, Loader2 } from 'lucide-react';
 import { HERO_STATS, LOCATION_DATA, CATEGORIES } from '../constants';
 import { PageData } from '../types';
+import AppSelect from './AppSelect';
 
 interface HeroProps {
   onNavigate?: (page: string, data?: PageData) => void;
@@ -191,18 +192,18 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 <div>
                   <label className="block text-xs font-bold text-brand-textSub mb-2 uppercase tracking-wide">What are you looking for?</label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <select 
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                    <AppSelect 
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none appearance-none bg-gray-800 text-white"
+                      className="pl-10 pr-10"
                     >
-                      <option className="text-gray-300">Select Category...</option>
+                      <option>Select Category...</option>
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    </AppSelect>
                     <button 
                       onClick={startListening}
-                      className={`absolute right-2 top-2 p-1.5 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                       title="Voice Search"
                       type="button"
                     >
@@ -214,40 +215,32 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-brand-textSub mb-2 uppercase tracking-wide">State</label>
-                    <div className="relative">
-                      <select 
-                        value={selectedState}
-                        onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
-                        className="w-full px-3 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white text-sm appearance-none"
-                      >
-                        <option value="" className="text-gray-300">All India</option>
-                        {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                      </select>
-                      <ChevronDown size={14} className="absolute right-2 top-3.5 text-gray-400 pointer-events-none" />
-                    </div>
+                    <AppSelect 
+                      value={selectedState}
+                      onChange={(e) => { setSelectedState(e.target.value); setSelectedDistrict(''); }}
+                    >
+                      <option value="">All India</option>
+                      {LOCATION_DATA.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                    </AppSelect>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-brand-textSub mb-2 uppercase tracking-wide">District</label>
-                    <div className="relative">
-                      <select 
-                        value={selectedDistrict}
-                        onChange={(e) => setSelectedDistrict(e.target.value)}
-                        disabled={!selectedState}
-                        className="w-full px-3 py-3 border border-gray-600 rounded-card focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white text-sm appearance-none disabled:opacity-50"
-                      >
-                        <option value="" className="text-gray-300">Select...</option>
-                        {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
-                      </select>
-                      <ChevronDown size={14} className="absolute right-2 top-3.5 text-gray-400 pointer-events-none" />
-                    </div>
+                    <AppSelect 
+                      value={selectedDistrict}
+                      onChange={(e) => setSelectedDistrict(e.target.value)}
+                      disabled={!selectedState}
+                    >
+                      <option value="">Select...</option>
+                      {districts.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                    </AppSelect>
                   </div>
                 </div>
 
                 <div>
                    <label className="block text-xs font-bold text-brand-textSub mb-2 uppercase tracking-wide">Budget Range</label>
                    <div className="flex gap-4">
-                     <input type="number" placeholder="Min Budget" className="w-1/2 px-3 py-3 border border-gray-600 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white placeholder-gray-400 caret-white" />
-                     <input type="number" placeholder="Max Budget" className="w-1/2 px-3 py-3 border border-gray-600 rounded-card text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none bg-gray-800 text-white placeholder-gray-400 caret-white" />
+                     <input type="number" placeholder="Min Budget" className="w-1/2 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none placeholder-gray-500" />
+                     <input type="number" placeholder="Max Budget" className="w-1/2 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-primary focus:border-transparent focus:outline-none placeholder-gray-500" />
                    </div>
                 </div>
 
