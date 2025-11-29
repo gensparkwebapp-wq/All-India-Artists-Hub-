@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView, useAnimationControls, animate } from 'framer-motion';
 import {
-  Globe, Heart, Twitter, Instagram, Youtube, Rocket, MapPin, Users
+  Globe, Heart, Twitter, Instagram, Youtube, Mic, MapPin, Users
 } from 'lucide-react';
 
 // A reusable counter component for animated stats
@@ -71,11 +71,11 @@ const About: React.FC = () => {
       story_quote: "“Talent never wastes; it just needs the right platform.” – Vijay Kumar",
       mission_title: "What We Do",
       mission_card_title: "Mission",
-      mission_card_content: "Empowerment: Free profiles, portfolios, search tools for artists. Community Build: Facebook-clone pages, referral prestige points, awards (Silver for 100 referrals, Gold for 500, Golden for 1000 – digital certificates public on site). Support: NGO tie-ups for welfare, events, news, podcasts.",
+      mission_card_content: "Empowerment: Free profiles, portfolios, search tools for artists.\nCommunity Build: Facebook-clone pages, referral prestige points, awards (Silver for 100 referrals, Gold for 500, Golden for 1000 – digital certificates public on site).\nSupport: NGO tie-ups for welfare, events, news, podcasts.",
       vision_card_title: "Vision",
-      vision_card_content: "Global Reach: International bookings, monetization. Innovation: AI job portal, YouTube clone, live music classes – all in one. Growth: Spotlight top artists (highest followers/points) on homepage side-scrolling.",
+      vision_card_content: "Global Reach: International bookings, monetization.\nInnovation: AI job portal, YouTube clone, live music classes – all in one.\nGrowth: Spotlight top artists (highest followers/points) on homepage side-scrolling.",
       values_card_title: "Values",
-      values_card_content: "Inclusive: Open to all categories (Singer/Actor/Dancer/Model/Photographer etc.). Transparency: Free access, clear paid services (bookings, ads, artist cards). Sustainable: Marketplace for instruments/gear, ad revenue share.",
+      values_card_content: "Inclusive: Open to all categories (Singer/Actor/Dancer/Model/Photographer etc.).\nTransparency: Free access, clear paid services (bookings, ads, artist cards).\nSustainable: Marketplace for instruments/gear, ad revenue share.",
       ngo_title: "Meri Pahal: For Artist Welfare",
       ngo_content: "'Meri Pahal Fast Help Artist Welfare Association (Trust)' – Reg No: 4186/22-23,12A80G. Focus: Women empowerment, self-employment schemes from Rajasthan (Jaipur) to Haryana, MP, Bihar, Jharkhand, Assam, UP, Uttarakhand, WB, Delhi, Odisha, Goa, Maharashtra. Membership: ₹100/year – Help card with discounts, medical support, recharges. Posters integrate workshops for artists.",
       ngo_cta: "Become Member",
@@ -106,11 +106,11 @@ const About: React.FC = () => {
       story_quote: "\"प्रतिभा कभी बर्बाद नहीं होती; उसे बस सही मंच की जरूरत होती है।\" - विजय कुमार",
       mission_title: "हम क्या करते हैं",
       mission_card_title: "मिशन",
-      mission_card_content: "सशक्तिकरण: कलाकारों के लिए मुफ्त प्रोफाइल, पोर्टफोलियो, खोज उपकरण। सामुदायिक निर्माण: फेसबुक-क्लोन पेज, रेफरल प्रतिष्ठा अंक, पुरस्कार (100 रेफरल के लिए सिल्वर, 500 के लिए गोल्ड, 1000 के लिए गोल्डन - साइट पर सार्वजनिक डिजिटल प्रमाण पत्र)। समर्थन: कल्याण, घटनाओं, समाचार, पॉडकास्ट के लिए एनजीओ टाई-अप।",
+      mission_card_content: "सशक्तिकरण: कलाकारों के लिए मुफ्त प्रोफाइल, पोर्टफोलियो, खोज उपकरण।\nसामुदायिक निर्माण: फेसबुक-क्लोन पेज, रेफरल प्रतिष्ठा अंक, पुरस्कार (100 रेफरल के लिए सिल्वर, 500 के लिए गोल्ड, 1000 के लिए गोल्डन - साइट पर सार्वजनिक डिजिटल प्रमाण पत्र)।\nसमर्थन: कल्याण, घटनाओं, समाचार, पॉडकास्ट के लिए एनजीओ टाई-अप।",
       vision_card_title: "दृष्टि",
-      vision_card_content: "वैश्विक पहुंच: अंतर्राष्ट्रीय बुकिंग, मुद्रीकरण। नवाचार: एआई जॉब पोर्टल, यूट्यूब क्लोन, लाइव संगीत कक्षाएं - सब एक में। विकास: होमपेज साइड-स्क्रॉलिंग पर शीर्ष कलाकारों (उच्चतम अनुयायियों/अंकों) को स्पॉटलाइट करें।",
+      vision_card_content: "वैश्विक पहुंच: अंतर्राष्ट्रीय बुकिंग, मुद्रीकरण।\nनवाचार: एआई जॉब पोर्टल, यूट्यूब क्लोन, लाइव संगीत कक्षाएं - सब एक में।\nविकास: होमपेज साइड-स्क्रॉलिंग पर शीर्ष कलाकारों (उच्चतम अनुयायियों/अंकों) को स्पॉटलाइट करें।",
       values_card_title: "मूल्य",
-      values_card_content: "समावेशी: सभी श्रेणियों के लिए खुला (गायक/अभिनेता/नर्तक/मॉडल/फोटोग्राफर आदि)। पारदर्शिता: मुफ्त पहुंच, स्पष्ट भुगतान सेवाएं (बुकिंग, विज्ञापन, कलाकार कार्ड)। सतत: उपकरणों/गियर के लिए बाज़ार, विज्ञापन राजस्व में हिस्सेदारी।",
+      values_card_content: "समावेशी: सभी श्रेणियों के लिए खुला (गायक/अभिनेता/नर्तक/मॉडल/फोटोग्राफर आदि)।\nपारदर्शिता: मुफ्त पहुंच, स्पष्ट भुगतान सेवाएं (बुकिंग, विज्ञापन, कलाकार कार्ड)।\nसतत: उपकरणों/गियर के लिए बाज़ार, विज्ञापन राजस्व में हिस्सेदारी।",
       ngo_title: "मेरी पहल: कलाकार कल्याण के लिए",
       ngo_content: "'मेरी पहल फास्ट हेल्प आर्टिस्ट वेलफेयर एसोसिएशन (ट्रस्ट)' - पंजीकरण संख्या: 4186/22-23,12A80G। फोकस: महिला सशक्तिकरण, राजस्थान (जयपुर) से हरियाणा, एमपी, बिहार, झारखंड, असम, यूपी, उत्तराखंड, डब्ल्यूबी, दिल्ली, ओडिशा, गोवा, महाराष्ट्र तक स्वरोजगार योजनाएं। सदस्यता: ₹100/वर्ष - छूट, चिकित्सा सहायता, रिचार्ज के साथ हेल्प कार्ड। पोस्टर कलाकारों के लिए कार्यशालाओं को एकीकृत करते हैं।",
       ngo_cta: "सदस्य बनें",
@@ -271,7 +271,7 @@ const About: React.FC = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-12">{t.mission_title}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Rocket, title: t.mission_card_title, content: t.mission_card_content, color: 'blue' },
+              { icon: Mic, title: t.mission_card_title, content: t.mission_card_content, color: 'blue' },
               { icon: Globe, title: t.vision_card_title, content: t.vision_card_content, color: 'orange' },
               { icon: Heart, title: t.values_card_title, content: t.values_card_content, color: 'green' }
             ].map((card, i) => (
@@ -282,7 +282,7 @@ const About: React.FC = () => {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.3 }}
-                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col items-center"
+                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex flex-col items-center"
               >
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6
                   ${card.color === 'blue' ? 'bg-blue-100 text-blue-600' : card.color === 'orange' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}
@@ -290,7 +290,11 @@ const About: React.FC = () => {
                   <card.icon size={32} />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">{card.title}</h3>
-                <p className="text-gray-600 leading-relaxed text-center">{card.content}</p>
+                 <div className="text-gray-600 leading-relaxed text-center space-y-3">
+                  {card.content.split('\n').map((line, index) => (
+                    <p key={index}>{line}</p>
+                  ))}
+                </div>
               </motion.div>
             ))}
           </div>
