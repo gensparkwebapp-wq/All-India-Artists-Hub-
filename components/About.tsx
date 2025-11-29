@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useInView, useAnimationControls, animate } from 'framer-motion';
+import { motion, useInView, animate } from 'framer-motion';
 import {
-  Globe, Heart, Twitter, Instagram, Youtube, Mic, MapPin, Users, X
+  Globe, Heart, Twitter, Instagram, Youtube, Mic, MapPin, Users, X, ChevronLeft, ChevronRight, Rocket, User
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { LOCATION_DATA } from '../constants';
@@ -11,7 +11,6 @@ import { LOCATION_DATA } from '../constants';
 const StatCounter = ({ to, text, icon: Icon }: { to: number, text: string, icon: React.ElementType }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
-  const controls = useAnimationControls();
   const [displayValue, setDisplayValue] = useState("0");
 
   useEffect(() => {
@@ -110,24 +109,61 @@ const About: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [isNgoModalOpen, setIsNgoModalOpen] = useState(false);
   const { showToast } = useToast();
+  
+  const teamMembers = [
+    { name: 'Vijay Kumar', title: 'Founder', img: 'https://example.com/vijay-blue-suit.jpg', link: '#' },
+    { name: 'Aisha Sharma', title: 'Lead Developer (React/Node)', img: 'https://i.pravatar.cc/300?img=25', link: '#' },
+    { name: 'Rohan Gupta', title: 'Content Creator', img: 'https://i.pravatar.cc/300?img=32', link: '#' },
+    { name: 'Priya Singh', title: 'Artist Mentor', img: 'https://i.pravatar.cc/300?img=35', link: '#' },
+  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const timeoutRef = useRef<number | null>(null);
+
+  const resetTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  useEffect(() => {
+    resetTimeout();
+    timeoutRef.current = setTimeout(
+      () => setCurrentSlide((prev) => (prev === teamMembers.length - 1 ? 0 : prev + 1)),
+      4000
+    );
+    return () => resetTimeout();
+  }, [currentSlide, teamMembers.length]);
+
 
   useEffect(() => {
     document.title = "About ArtistsHub India – Empowering Indian Artists";
-    const metaDesc = document.createElement('meta');
-    metaDesc.name = "description";
-    metaDesc.content = "Learn about ArtistsHub India, a platform dedicated to empowering Indian artists. Discover our mission to unite singers, dancers, actors, and musicians, and learn about our NGO partnership for artist welfare. Join the largest indian singers directory and artist booking community.";
-    document.head.appendChild(metaDesc);
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+        metaDesc.setAttribute("content", "Learn about ArtistsHub India, a platform dedicated to empowering Indian artists. Discover our mission to unite singers, dancers, actors, and musicians, and learn about our NGO partnership for artist welfare. Join the largest indian singers directory and artist booking community.");
+    } else {
+        const newMeta = document.createElement('meta');
+        newMeta.name = "description";
+        newMeta.content = "Learn about ArtistsHub India, a platform dedicated to empowering Indian artists. Discover our mission to unite singers, dancers, actors, and musicians, and learn about our NGO partnership for artist welfare. Join the largest indian singers directory and artist booking community.";
+        document.head.appendChild(newMeta);
+    }
   }, []);
 
   const toggleLang = () => setLang(prev => prev === 'en' ? 'hi' : 'en');
   
-    const handleNgoSubmit = (data: any) => {
-    // Simulate API call to /api/membership
-    console.log("Submitting NGO Membership:", data);
-    
-    // Show success toast and close modal
+  const handleNgoSubmit = (data: any) => {
+    console.log("Submitting NGO Membership:", data); // Simulates API call to /api/membership
     showToast(`Thank you, ${data.name}! Your application is submitted.`);
     setIsNgoModalOpen(false);
+  };
+  
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Simulate API call to /api/contact
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    console.log("Submitting contact form:", Object.fromEntries(formData));
+    showToast(`Thank you, ${name}! We've received your message.`);
+    e.currentTarget.reset();
   };
   
   const content = {
@@ -248,18 +284,17 @@ const About: React.FC = () => {
         transition={{ duration: 1.5 }}
         className="relative min-h-screen flex items-center justify-center text-center px-4 pt-20 pb-10 bg-black"
       >
-        <motion.div 
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 10, ease: 'linear', repeat: Infinity, repeatType: 'reverse' }}
-          className="absolute inset-0 z-0 opacity-40"
-        >
-          <img
-            src="https://source.unsplash.com/random/1920x1080/?indian-music"
-            alt="Indian artists performing on stage with vibrant lights"
-            className="w-full h-full object-cover"
-          />
-        </motion.div>
+        <div className="absolute inset-0 z-0">
+            <motion.img
+                key="hero-bg"
+                src="https://source.unsplash.com/random/1920x1080/?indian-music"
+                alt="Indian artists performing on stage with vibrant lights"
+                className="w-full h-full object-cover opacity-40"
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 0.4, scale: 1 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#007BFF]/70 to-[#FF6B35]/50 z-0"></div>
         
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
@@ -361,7 +396,8 @@ const About: React.FC = () => {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.3 }}
-                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 flex flex-col items-center"
+                whileHover={{ scale: 1.05, y: -8 }}
+                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col items-center"
               >
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6
                   ${card.color === 'blue' ? 'bg-blue-100 text-blue-600' : card.color === 'orange' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}
@@ -391,10 +427,11 @@ const About: React.FC = () => {
             className="relative group"
           >
             <a href="/ngo" aria-label="Learn more about our NGO partner">
-              <img
+              <motion.img
+                whileHover={{ scale: 1.05 }}
                 src="https://example.com/meri-pahal-poster.jpg"
                 alt="Meri Pahal NGO Poster with tricolor logo and list of states served"
-                className="rounded-lg shadow-xl w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105 bg-gray-200 aspect-[3/4]"
+                className="rounded-lg shadow-xl w-full h-auto object-cover bg-gray-200 aspect-[3/4]"
               />
             </a>
           </motion.div>
@@ -407,12 +444,14 @@ const About: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.ngo_title}</h2>
             <div className="w-20 h-1.5 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full mb-6"></div>
             <p className="text-gray-600 leading-relaxed mb-8">{t.ngo_content}</p>
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsNgoModalOpen(true)}
-              className="bg-[#007BFF] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition transform hover:scale-105"
+              className="bg-[#007BFF] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition"
             >
               {t.ngo_cta}
-            </button>
+            </motion.button>
           </motion.div>
         </div>
       </section>
@@ -421,15 +460,54 @@ const About: React.FC = () => {
       <section className="py-20 px-4 bg-gray-800 text-white overflow-hidden">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">{t.team_title}</h2>
-          <p className="max-w-2xl mx-auto text-gray-300 mb-12">{t.team_content}</p>
-          <div className="flex justify-center mb-16 -space-x-4">
-             <img src="https://example.com/vijay-blue-suit.jpg" alt="Founder Vijay Kumar" className="w-16 h-16 rounded-full border-4 border-gray-800 object-cover shadow-lg" />
-            {Array(3).fill(0).map((_, i) => (
-              <img key={i} src={`https://i.pravatar.cc/150?img=${i+10}`} alt={`Team member ${i+1}`} className="w-16 h-16 rounded-full border-4 border-gray-800 object-cover shadow-lg" />
-            ))}
-            <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold border-4 border-gray-800 shadow-lg">5+</div>
+          <p className="max-w-3xl mx-auto text-gray-300 mb-12 leading-relaxed">{t.team_content}</p>
+          
+          <div 
+            className="max-w-4xl mx-auto relative mb-16"
+            onMouseEnter={resetTimeout}
+            onMouseLeave={() => {
+              timeoutRef.current = setTimeout(
+                () => setCurrentSlide(prev => (prev === teamMembers.length - 1 ? 0 : prev + 1)),
+                4000
+              );
+            }}
+          >
+            <div className="overflow-hidden relative h-80">
+              {teamMembers.map((member, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: index === currentSlide ? 1 : 0 }}
+                  transition={{ duration: 0.7, ease: 'easeInOut' }}
+                  className="absolute inset-0"
+                >
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <img src={member.img} alt={member.name} className="w-32 h-32 rounded-full object-cover border-4 border-orange-400 shadow-lg mb-4" />
+                    <h4 className="text-xl font-bold">{member.name}</h4>
+                    <p className="text-orange-300 font-medium">{member.title}</p>
+                    <a href={member.link} className="text-sm text-blue-300 hover:underline mt-2">View Bio</a>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <button 
+              onClick={() => setCurrentSlide(prev => (prev === 0 ? teamMembers.length - 1 : prev - 1))}
+              className="absolute top-1/2 -translate-y-1/2 left-0 md:-left-12 bg-white/10 p-2 rounded-full hover:bg-white/20 transition">
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={() => setCurrentSlide(prev => (prev === teamMembers.length - 1 ? 0 : prev + 1))}
+              className="absolute top-1/2 -translate-y-1/2 right-0 md:-right-12 bg-white/10 p-2 rounded-full hover:bg-white/20 transition">
+              <ChevronRight size={24} />
+            </button>
+             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+              {teamMembers.map((_, i) => (
+                <button key={i} onClick={() => setCurrentSlide(i)} className={`w-3 h-3 rounded-full transition ${currentSlide === i ? 'bg-orange-400' : 'bg-gray-500'}`}></button>
+              ))}
+            </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-12 border-t border-gray-700">
             <StatCounter to={50000} text={t.stat_artists} icon={Users} />
             <StatCounter to={10} text={t.stat_states} icon={MapPin} />
             <StatCounter to={1000000} text={t.stat_views} icon={Youtube} />
@@ -449,18 +527,18 @@ const About: React.FC = () => {
               transition={{ duration: 0.7 }}
               className="bg-white p-8 rounded-xl shadow-xl w-full max-w-lg mx-auto text-left"
             >
-              <form action="/api/contact" method="POST" className="space-y-6">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="font-semibold text-gray-700">{t.form_name}</label>
-                  <input id="name" name="name" type="text" placeholder="Your Name" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition" />
+                  <input id="name" name="name" type="text" placeholder="Your Name" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:glow transition" />
                 </div>
                 <div>
                   <label htmlFor="email" className="font-semibold text-gray-700">{t.form_email}</label>
-                  <input id="email" name="email" type="email" placeholder="Your Email" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition" />
+                  <input id="email" name="email" type="email" placeholder="Your Email" required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:glow transition" />
                 </div>
                 <div>
                   <label htmlFor="message" className="font-semibold text-gray-700">{t.form_message}</label>
-                  <textarea id="message" name="message" placeholder="Your Message" rows={4} required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 transition"></textarea>
+                  <textarea id="message" name="message" placeholder="Your Message" rows={4} required className="mt-2 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:glow transition"></textarea>
                 </div>
                 <button type="submit" className="w-full bg-gradient-to-r from-[#007BFF] to-[#0056b3] text-white py-3 rounded-lg font-bold text-lg hover:shadow-lg transition transform hover:-translate-y-1">
                   {t.form_submit}
@@ -468,7 +546,7 @@ const About: React.FC = () => {
               </form>
             </motion.div>
             <div className="mt-8 flex justify-center space-x-6">
-              <a href="#" aria-label="Follow us on Twitter" className="text-gray-500 hover:text-blue-600 transition"><Twitter size={24} /></a>
+              <a href="#" aria-label="Follow us on X" className="text-gray-500 hover:text-blue-600 transition"><Twitter size={24} /></a>
               <a href="#" aria-label="Follow us on Instagram" className="text-gray-500 hover:text-pink-600 transition"><Instagram size={24} /></a>
               <a href="#" aria-label="Subscribe to our YouTube channel" className="text-gray-500 hover:text-red-600 transition"><Youtube size={24} /></a>
             </div>
@@ -478,7 +556,7 @@ const About: React.FC = () => {
       {/* 7. Footer */}
       <footer className="bg-white py-6 border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} ArtistsHub India</p>
+          <p>{t.footer_copyright}</p>
           <div className="flex space-x-6 mt-4 sm:mt-0">
             <a href="/privacy-policy" className="hover:text-blue-600">{t.footer_privacy}</a>
             <a href="/terms-of-service" className="hover:text-blue-600">{t.footer_terms}</a>
